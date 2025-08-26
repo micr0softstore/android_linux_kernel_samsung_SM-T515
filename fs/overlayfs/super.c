@@ -251,12 +251,15 @@ bool ovl_is_whiteout(struct dentry *dentry)
 
 const struct cred *ovl_override_creds(struct super_block *sb)
 {
-	struct ovl_fs *ofs = sb->s_fs_info;
+    struct ovl_fs *ofs = sb->s_fs_info;
 
-	if (!ofs->config.override_creds)
-		return NULL;
-	return override_creds(ofs->creator_cred);
+    if (!ofs->config.override_creds)
+        return NULL;
+
+    return ofs->creator_cred;
 }
+
+
 
 void ovl_revert_creds(const struct cred *old_cred)
 {
@@ -973,6 +976,11 @@ static unsigned int ovl_split_lowerdirs(char *str)
 			break;
 	}
 	return ctr;
+}
+
+static inline void rkp_set_mnt_flags(struct vfsmount *mnt, unsigned long flags)
+{
+    // No-op for 4.4
 }
 
 static int ovl_fill_super(struct super_block *sb, void *data, int silent)

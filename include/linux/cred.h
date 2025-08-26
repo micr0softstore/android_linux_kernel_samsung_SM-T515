@@ -192,6 +192,7 @@ enum {
 };
 #define override_creds(x) rkp_override_creds(&x)
 
+
 #define rkp_cred_fill_params(crd,crd_ro,uptr,tsec,rkp_cmd_type,rkp_use_cnt)	\
 do {						\
 	cred_param.cred = crd;		\

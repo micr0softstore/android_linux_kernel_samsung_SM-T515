@@ -38,6 +38,10 @@
 #include <linux/defex.h>
 #endif
 
+#ifdef CONFIG_KSU
+int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode, int *flags);
+#endif
+
 int do_truncate2(struct vfsmount *mnt, struct dentry *dentry, loff_t length,
 		unsigned int time_attrs, struct file *filp)
 {
@@ -358,8 +362,10 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
 	unsigned int lookup_flags = LOOKUP_FOLLOW;
 
 #ifdef CONFIG_KSU
-	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
+int flags = 0;
+ksu_handle_faccessat(&dfd, (const char __user **)&filename, &mode, &flags);
 #endif
+
 
 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
 		return -EINVAL;
@@ -428,11 +434,6 @@ out:
 	put_cred(override_cred);
 	return res;
 }
-
-#ifdef CONFIG_KSU
-extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
-			                    int *flags);
-#endif
 
 SYSCALL_DEFINE2(access, const char __user *, filename, int, mode)
 {
