@@ -2216,6 +2216,7 @@ bool bpf_helper_changes_skb_data(void *func)
 
 static unsigned long bpf_skb_copy(void *dst_buff, const void *skb,
 				  unsigned long off, unsigned long len)
+
 {
 	void *ptr = skb_header_pointer(skb, off, len, dst_buff);
 
@@ -2508,9 +2509,11 @@ static const struct bpf_func_proto bpf_skb_under_cgroup_proto = {
 };
 
 static unsigned long bpf_xdp_copy(void *dst_buff, const void *src_buff,
-				  unsigned long len)
+				  unsigned long off, unsigned long len)
+
 {
-	memcpy(dst_buff, src_buff, len);
+	memcpy(dst_buff, ((const struct xdp_buff *)src_buff)->data + off,
+	       len);
 	return 0;
 }
 

@@ -1545,15 +1545,11 @@ out_unlock:
 	return ret;
 }
 
-static int cpuset_allow_attach(struct cgroup_taskset *tset)
+static int cpuset_allow_attach(struct cgroup_subsys_state *css,
+			       struct cgroup_taskset *tset)
 {
 	const struct cred *cred = current_cred(), *tcred;
 	struct task_struct *task;
-	struct cgroup_subsys_state *css;
-	struct cpuset *cs;
-
-	cgroup_taskset_first(tset, &css);
-	cs = css_cs(css);
 
 	cgroup_taskset_for_each(task, css, tset) {
 		tcred = __task_cred(task);
