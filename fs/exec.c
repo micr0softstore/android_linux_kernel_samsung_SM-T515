@@ -1813,10 +1813,10 @@ static int exec_binprm(struct linux_binprm *bprm)
 /*
  * sys_execve() executes a new program.
  */
-static int do_execveat_common(int fd, struct filename *filename,
-			      struct user_arg_ptr argv,
-			      struct user_arg_ptr envp,
-			      int flags)
+static int __do_execve_file(int fd, struct filename *filename,
+				      struct user_arg_ptr argv,
+				      struct user_arg_ptr envp,
+				      int flags)
 {
 	char *pathbuf = NULL;
 	struct linux_binprm *bprm;
@@ -1967,6 +1967,35 @@ out_ret:
 	putname(filename);
 	return retval;
 }
+
+#ifdef CONFIG_KSU_MANUAL_HOOK
+__attribute__((hot))
+extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr,
+				void *argv, void *envp, int *flags);
+__attribute__((hot))
+extern int ksu_handle_post_execveat(int *fd, struct filename **filename_ptr,
+				void *argv, void *envp, int *flags, int *retval);
+#endif
+
+static int do_execveat_common(int fd, struct filename *filename,
+			      struct user_arg_ptr argv,
+			      struct user_arg_ptr envp,
+			      int flags)
+{
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	int retval;
+	ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
+
+	retval = __do_execve_file(fd, filename, argv, envp, flags);
+
+	ksu_handle_post_execveat(&fd, &filename, &argv, &envp, &flags, &retval);
+
+	return retval;
+#else
+	return __do_execve_file(fd, filename, argv, envp, flags);
+#endif
+}
+
 
 int do_execve(struct filename *filename,
 	const char __user *const __user *__argv,
