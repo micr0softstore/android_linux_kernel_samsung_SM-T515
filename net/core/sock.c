@@ -135,6 +135,7 @@
 
 #include <linux/filter.h>
 #include <net/sock_reuseport.h>
+#include <net/bpf_sk_storage.h>
 
 #include <trace/events/sock.h>
 
@@ -1695,6 +1696,10 @@ void sk_destruct(struct sock *sk)
 
 	sock_disable_timestamp(sk, SK_FLAGS_TIMESTAMP);
 
+#ifdef CONFIG_BPF_SYSCALL
+	bpf_sk_storage_free(sk);
+#endif
+
 	if (atomic_read(&sk->sk_omem_alloc))
 		pr_debug("%s: optmem leakage (%d bytes) detected\n",
 			 __func__, atomic_read(&sk->sk_omem_alloc));
@@ -2235,6 +2240,67 @@ bool sk_page_frag_refill(struct sock *sk, struct page_frag *pfrag)
 }
 EXPORT_SYMBOL(sk_page_frag_refill);
 
+int sk_alloc_sg(struct sock *sk, int len, struct scatterlist *sg,
+		int sg_start, int *sg_curr_index, unsigned int *sg_curr_size,
+		int first_coalesce)
+{
+	int sg_curr = *sg_curr_index, use = 0, rc = 0;
+	unsigned int size = *sg_curr_size;
+	struct page_frag *pfrag;
+	struct scatterlist *sge;
+
+	len -= size;
+	pfrag = sk_page_frag(sk);
+
+	while (len > 0) {
+		unsigned int orig_offset;
+
+		if (!sk_page_frag_refill(sk, pfrag)) {
+			rc = -ENOMEM;
+			goto out;
+		}
+
+		use = min_t(int, len, pfrag->size - pfrag->offset);
+
+		if (!sk_wmem_schedule(sk, use)) {
+			rc = -ENOMEM;
+			goto out;
+		}
+
+		sk_mem_charge(sk, use);
+		size += use;
+		orig_offset = pfrag->offset;
+		pfrag->offset += use;
+
+		sge = sg + sg_curr - 1;
+		if (sg_curr > first_coalesce && sg_page(sg) == pfrag->page &&
+		    sg->offset + sg->length == orig_offset) {
+			sg->length += use;
+		} else {
+			sge = sg + sg_curr;
+			sg_unmark_end(sge);
+			sg_set_page(sge, pfrag->page, use, orig_offset);
+			get_page(pfrag->page);
+			sg_curr++;
+
+			if (sg_curr == MAX_SKB_FRAGS)
+				sg_curr = 0;
+
+			if (sg_curr == sg_start) {
+				rc = -ENOSPC;
+				break;
+			}
+		}
+
+		len -= use;
+	}
+out:
+	*sg_curr_size = size;
+	*sg_curr_index = sg_curr;
+	return rc;
+}
+EXPORT_SYMBOL(sk_alloc_sg);
+
 static void __lock_sock(struct sock *sk)
 	__releases(&sk->sk_lock.slock)
 	__acquires(&sk->sk_lock.slock)
@@ -2305,14 +2371,14 @@ static void __release_sock(struct sock *sk)
  */
 int sk_wait_data(struct sock *sk, long *timeo, const struct sk_buff *skb)
 {
+	DEFINE_WAIT_FUNC(wait, woken_wake_function);
 	int rc;
-	DEFINE_WAIT(wait);
 
-	prepare_to_wait(sk_sleep(sk), &wait, TASK_INTERRUPTIBLE);
+	add_wait_queue(sk_sleep(sk), &wait);
 	sk_set_bit(SOCKWQ_ASYNC_WAITDATA, sk);
-	rc = sk_wait_event(sk, timeo, skb_peek_tail(&sk->sk_receive_queue) != skb);
+	rc = sk_wait_event(sk, timeo, skb_peek_tail(&sk->sk_receive_queue) != skb, &wait);
 	sk_clear_bit(SOCKWQ_ASYNC_WAITDATA, sk);
-	finish_wait(sk_sleep(sk), &wait);
+	remove_wait_queue(sk_sleep(sk), &wait);
 	return rc;
 }
 EXPORT_SYMBOL(sk_wait_data);
@@ -2506,6 +2572,12 @@ int sock_no_sendmsg(struct socket *sock, struct msghdr *m, size_t len)
 }
 EXPORT_SYMBOL(sock_no_sendmsg);
 
+int sock_no_sendmsg_locked(struct sock *sk, struct msghdr *m, size_t len)
+{
+	return -EOPNOTSUPP;
+}
+EXPORT_SYMBOL(sock_no_sendmsg_locked);
+
 int sock_no_recvmsg(struct socket *sock, struct msghdr *m, size_t len,
 		    int flags)
 {
@@ -2533,6 +2605,22 @@ ssize_t sock_no_sendpage(struct socket *sock, struct page *page, int offset, siz
 	return res;
 }
 EXPORT_SYMBOL(sock_no_sendpage);
+
+ssize_t sock_no_sendpage_locked(struct sock *sk, struct page *page,
+				int offset, size_t size, int flags)
+{
+	ssize_t res;
+	struct msghdr msg = {.msg_flags = flags};
+	struct kvec iov;
+	char *kaddr = kmap(page);
+
+	iov.iov_base = kaddr + offset;
+	iov.iov_len = size;
+	res = kernel_sendmsg_locked(sk, &msg, &iov, 1, size);
+	kunmap(page);
+	return res;
+}
+EXPORT_SYMBOL(sock_no_sendpage_locked);
 
 /*
  *	Default Socket Callbacks

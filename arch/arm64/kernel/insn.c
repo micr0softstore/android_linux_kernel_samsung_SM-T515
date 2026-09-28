@@ -162,6 +162,32 @@ static bool __kprobes __aarch64_insn_hotpatch_safe(u32 insn)
 		aarch64_insn_is_nop(insn);
 }
 
+bool __kprobes aarch64_insn_uses_literal(u32 insn)
+{
+	/* ldr/ldrsw (literal), prfm */
+
+	return aarch64_insn_is_ldr_lit(insn) ||
+		aarch64_insn_is_ldrsw_lit(insn) ||
+		aarch64_insn_is_adr_adrp(insn) ||
+		aarch64_insn_is_prfm_lit(insn);
+}
+
+bool __kprobes aarch64_insn_is_branch(u32 insn)
+{
+	/* b, bl, cb*, tb*, b.cond, br, blr */
+
+	return aarch64_insn_is_b(insn) ||
+		aarch64_insn_is_bl(insn) ||
+		aarch64_insn_is_cbz(insn) ||
+		aarch64_insn_is_cbnz(insn) ||
+		aarch64_insn_is_tbz(insn) ||
+		aarch64_insn_is_tbnz(insn) ||
+		aarch64_insn_is_ret(insn) ||
+		aarch64_insn_is_br(insn) ||
+		aarch64_insn_is_blr(insn) ||
+		aarch64_insn_is_bcond(insn);
+}
+
 /*
  * ARM Architecture Reference Manual for ARMv8 Profile-A, Issue A.a
  * Section B2.6.5 "Concurrent modification and execution of instructions":
@@ -412,6 +438,7 @@ static u32 aarch64_insn_encode_register(enum aarch64_insn_register_type type,
 		shift = 10;
 		break;
 	case AARCH64_INSN_REGTYPE_RM:
+	case AARCH64_INSN_REGTYPE_RS:
 		shift = 16;
 		break;
 	default:
@@ -679,6 +706,151 @@ u32 aarch64_insn_gen_load_store_pair(enum aarch64_insn_register reg1,
 
 	return aarch64_insn_encode_immediate(AARCH64_INSN_IMM_7, insn,
 					     offset >> shift);
+}
+
+u32 aarch64_insn_gen_load_store_ex(enum aarch64_insn_register reg,
+				   enum aarch64_insn_register base,
+				   enum aarch64_insn_register state,
+				   enum aarch64_insn_size_type size,
+				   enum aarch64_insn_ldst_type type)
+{
+	u32 insn;
+
+	switch (type) {
+	case AARCH64_INSN_LDST_LOAD_EX:
+		insn = aarch64_insn_get_load_ex_value();
+		break;
+	case AARCH64_INSN_LDST_STORE_EX:
+		insn = aarch64_insn_get_store_ex_value();
+		break;
+	default:
+		pr_err("%s: unknown load/store exclusive encoding %d\n", __func__, type);
+		return AARCH64_BREAK_FAULT;
+	}
+
+	insn = aarch64_insn_encode_ldst_size(size, insn);
+
+	insn = aarch64_insn_encode_register(AARCH64_INSN_REGTYPE_RT, insn,
+					    reg);
+
+	insn = aarch64_insn_encode_register(AARCH64_INSN_REGTYPE_RN, insn,
+					    base);
+
+	insn = aarch64_insn_encode_register(AARCH64_INSN_REGTYPE_RT2, insn,
+					    AARCH64_INSN_REG_ZR);
+
+	return aarch64_insn_encode_register(AARCH64_INSN_REGTYPE_RS, insn,
+					    state);
+}
+
+u32 aarch64_insn_gen_ldadd(enum aarch64_insn_register result,
+			   enum aarch64_insn_register address,
+			   enum aarch64_insn_register value,
+			   enum aarch64_insn_size_type size)
+{
+	u32 insn = aarch64_insn_get_ldadd_value();
+
+	switch (size) {
+	case AARCH64_INSN_SIZE_32:
+	case AARCH64_INSN_SIZE_64:
+		break;
+	default:
+		pr_err("%s: unimplemented size encoding %d\n", __func__, size);
+		return AARCH64_BREAK_FAULT;
+	}
+
+	insn = aarch64_insn_encode_ldst_size(size, insn);
+
+	insn = aarch64_insn_encode_register(AARCH64_INSN_REGTYPE_RT, insn,
+					    result);
+
+	insn = aarch64_insn_encode_register(AARCH64_INSN_REGTYPE_RN, insn,
+					    address);
+
+	return aarch64_insn_encode_register(AARCH64_INSN_REGTYPE_RS, insn,
+					    value);
+}
+
+u32 aarch64_insn_gen_stadd(enum aarch64_insn_register address,
+			   enum aarch64_insn_register value,
+			   enum aarch64_insn_size_type size)
+{
+	/*
+	 * STADD is simply encoded as an alias for LDADD with XZR as
+	 * the destination register.
+	 */
+	return aarch64_insn_gen_ldadd(AARCH64_INSN_REG_ZR, address,
+				      value, size);
+}
+
+static u32 aarch64_insn_encode_prfm_imm(enum aarch64_insn_prfm_type type,
+					enum aarch64_insn_prfm_target target,
+					enum aarch64_insn_prfm_policy policy,
+					u32 insn)
+{
+	u32 imm_type = 0, imm_target = 0, imm_policy = 0;
+
+	switch (type) {
+	case AARCH64_INSN_PRFM_TYPE_PLD:
+		break;
+	case AARCH64_INSN_PRFM_TYPE_PLI:
+		imm_type = BIT(0);
+		break;
+	case AARCH64_INSN_PRFM_TYPE_PST:
+		imm_type = BIT(1);
+		break;
+	default:
+		pr_err("%s: unknown prfm type encoding %d\n", __func__, type);
+		return AARCH64_BREAK_FAULT;
+	}
+
+	switch (target) {
+	case AARCH64_INSN_PRFM_TARGET_L1:
+		break;
+	case AARCH64_INSN_PRFM_TARGET_L2:
+		imm_target = BIT(0);
+		break;
+	case AARCH64_INSN_PRFM_TARGET_L3:
+		imm_target = BIT(1);
+		break;
+	default:
+		pr_err("%s: unknown prfm target encoding %d\n", __func__, target);
+		return AARCH64_BREAK_FAULT;
+	}
+
+	switch (policy) {
+	case AARCH64_INSN_PRFM_POLICY_KEEP:
+		break;
+	case AARCH64_INSN_PRFM_POLICY_STRM:
+		imm_policy = BIT(0);
+		break;
+	default:
+		pr_err("%s: unknown prfm policy encoding %d\n", __func__, policy);
+		return AARCH64_BREAK_FAULT;
+	}
+
+	/* In this case, imm5 is encoded into Rt field. */
+	insn &= ~GENMASK(4, 0);
+	insn |= imm_policy | (imm_target << 1) | (imm_type << 3);
+
+	return insn;
+}
+
+u32 aarch64_insn_gen_prefetch(enum aarch64_insn_register base,
+			      enum aarch64_insn_prfm_type type,
+			      enum aarch64_insn_prfm_target target,
+			      enum aarch64_insn_prfm_policy policy)
+{
+	u32 insn = aarch64_insn_get_prfm_value();
+
+	insn = aarch64_insn_encode_ldst_size(AARCH64_INSN_SIZE_64, insn);
+
+	insn = aarch64_insn_encode_prfm_imm(type, target, policy, insn);
+
+	insn = aarch64_insn_encode_register(AARCH64_INSN_REGTYPE_RN, insn,
+					    base);
+
+	return aarch64_insn_encode_immediate(AARCH64_INSN_IMM_12, insn, 0);
 }
 
 u32 aarch64_insn_gen_add_sub_imm(enum aarch64_insn_register dst,
@@ -1116,6 +1288,14 @@ u32 aarch64_set_branch_offset(u32 insn, s32 offset)
 	BUG();
 }
 
+/*
+ * Extract the Op/CR data from a msr/mrs instruction.
+ */
+u32 aarch64_insn_extract_system_reg(u32 insn)
+{
+	return (insn & 0x1FFFE0) >> 5;
+}
+
 bool aarch32_insn_is_wide(u32 insn)
 {
 	return insn >= 0xe800;
@@ -1141,3 +1321,101 @@ u32 aarch32_insn_mcr_extract_crm(u32 insn)
 {
 	return insn & CRM_MASK;
 }
+
+static bool __kprobes __check_eq(unsigned long pstate)
+{
+	return (pstate & PSR_Z_BIT) != 0;
+}
+
+static bool __kprobes __check_ne(unsigned long pstate)
+{
+	return (pstate & PSR_Z_BIT) == 0;
+}
+
+static bool __kprobes __check_cs(unsigned long pstate)
+{
+	return (pstate & PSR_C_BIT) != 0;
+}
+
+static bool __kprobes __check_cc(unsigned long pstate)
+{
+	return (pstate & PSR_C_BIT) == 0;
+}
+
+static bool __kprobes __check_mi(unsigned long pstate)
+{
+	return (pstate & PSR_N_BIT) != 0;
+}
+
+static bool __kprobes __check_pl(unsigned long pstate)
+{
+	return (pstate & PSR_N_BIT) == 0;
+}
+
+static bool __kprobes __check_vs(unsigned long pstate)
+{
+	return (pstate & PSR_V_BIT) != 0;
+}
+
+static bool __kprobes __check_vc(unsigned long pstate)
+{
+	return (pstate & PSR_V_BIT) == 0;
+}
+
+static bool __kprobes __check_hi(unsigned long pstate)
+{
+	pstate &= ~(pstate >> 1);	/* PSR_C_BIT &= ~PSR_Z_BIT */
+	return (pstate & PSR_C_BIT) != 0;
+}
+
+static bool __kprobes __check_ls(unsigned long pstate)
+{
+	pstate &= ~(pstate >> 1);	/* PSR_C_BIT &= ~PSR_Z_BIT */
+	return (pstate & PSR_C_BIT) == 0;
+}
+
+static bool __kprobes __check_ge(unsigned long pstate)
+{
+	pstate ^= (pstate << 3);	/* PSR_N_BIT ^= PSR_V_BIT */
+	return (pstate & PSR_N_BIT) == 0;
+}
+
+static bool __kprobes __check_lt(unsigned long pstate)
+{
+	pstate ^= (pstate << 3);	/* PSR_N_BIT ^= PSR_V_BIT */
+	return (pstate & PSR_N_BIT) != 0;
+}
+
+static bool __kprobes __check_gt(unsigned long pstate)
+{
+	/*PSR_N_BIT ^= PSR_V_BIT */
+	unsigned long temp = pstate ^ (pstate << 3);
+
+	temp |= (pstate << 1);	/*PSR_N_BIT |= PSR_Z_BIT */
+	return (temp & PSR_N_BIT) == 0;
+}
+
+static bool __kprobes __check_le(unsigned long pstate)
+{
+	/*PSR_N_BIT ^= PSR_V_BIT */
+	unsigned long temp = pstate ^ (pstate << 3);
+
+	temp |= (pstate << 1);	/*PSR_N_BIT |= PSR_Z_BIT */
+	return (temp & PSR_N_BIT) != 0;
+}
+
+static bool __kprobes __check_al(unsigned long pstate)
+{
+	return true;
+}
+
+/*
+ * Note that the ARMv8 ARM calls condition code 0b1111 "nv", but states that
+ * it behaves identically to 0b1110 ("al").
+ */
+pstate_check_t * const aarch32_opcode_cond_checks[16] = {
+	__check_eq, __check_ne, __check_cs, __check_cc,
+	__check_mi, __check_pl, __check_vs, __check_vc,
+	__check_hi, __check_ls, __check_ge, __check_lt,
+	__check_gt, __check_le, __check_al, __check_al
+};

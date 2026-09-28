@@ -115,6 +115,7 @@ enum {
 #define TCP_CC_INFO		26	/* Get Congestion Control (optional) info */
 #define TCP_SAVE_SYN		27	/* Record SYN headers for new connections */
 #define TCP_SAVED_SYN		28	/* Get SYN headers recorded for connection */
+#define TCP_ULP		31	/* Attach a ULP to a TCP connection */
 
 #ifdef CONFIG_MPTCP
 	#define MPTCP_ENABLED		42
@@ -161,6 +162,7 @@ struct tcp_info {
 	__u8	tcpi_backoff;
 	__u8	tcpi_options;
 	__u8	tcpi_snd_wscale : 4, tcpi_rcv_wscale : 4;
+	__u8	tcpi_delivery_rate_app_limited:1;
 
 	__u32	tcpi_rto;
 	__u32	tcpi_ato;
@@ -200,6 +202,11 @@ struct tcp_info {
 	__u64	tcpi_bytes_received; /* RFC4898 tcpEStatsAppHCThruOctetsReceived */
 	__u32	tcpi_segs_out;	     /* RFC4898 tcpEStatsPerfSegsOut */
 	__u32	tcpi_segs_in;	     /* RFC4898 tcpEStatsPerfSegsIn */
+
+	__u32	tcpi_data_segs_in;	/* RFC4898 tcpEStatsDataSegsIn */
+	__u32	tcpi_data_segs_out;	/* RFC4898 tcpEStatsDataSegsOut */
+
+	__u64   tcpi_delivery_rate;
 };
 
 /* for TCP_MD5SIG socket option */

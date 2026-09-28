@@ -798,6 +798,7 @@ cond_branch:			f_offset = addrs[i + filter[i].jf];
 		bpf_flush_icache(image, image + proglen);
 		fp->bpf_func = (void *)image;
 		fp->jited = 1;
+		fp->jited_len = image_size;
 	}
 out:
 	kfree(addrs);

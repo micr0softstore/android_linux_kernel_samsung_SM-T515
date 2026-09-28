@@ -1,0 +1,1003 @@
+SM-T515 BPF donor provenance
+============================
+
+Repository: https://github.com/Andeveloperlab/exynos-8895
+Branch: sep-16.1
+Existing-stack checkpoint: 612e1a2f5261
+Requested window: a8175ee2e4af..64952a192936 (inclusive)
+
+The following commits supply the cumulative BPF integration. They are folded
+into one target-adapted commit to avoid replaying the existing 4.9 backports
+and intermediate add/revert pairs. Original copyright and license notices
+remain in the sources.
+
+Excluded: unrelated GPU, wireless driver, display, EROFS, Incremental FS, and
+cgroup-v2 modernization; broad vmalloc allocator replacement; redundant early
+BPF_OBJ_GET_INFO and Kprobes/endian add/revert pairs.
+
+The kvmalloc/set_memory APIs are separately adapted from 0a6fe978d575 and
+36f2ecd2caa3 without the allocator rewrite. The Android uname shim is separately
+picked from 7e08c463294f, 3d8396c100fa, 6da514b59391, e5e06bfdab5e, 64952a192936.
+
+Selected donor commits in integration order:
+
+1e40a616534daa0aa013d52105f5eb54ff2578c7 ebpf: allow bpf_get_current_uid_gid_proto also for networking
+a2526fefc7fcd02e6d0f62db023ac1aec488651d bpf: Add new cgroup attach type to enable sock modifications
+d5b802c18deec63ede220b02a0f9cdfa2256d039 bpf: split HAVE_BPF_JIT into cBPF and eBPF variant
+d8622132283d5791bdce889b87ae554dedac880d bpf: remove stubs for cBPF from arch code
+72fb1d8f4591cd3b0516420f7ca96cdb3b895bd3 bpf: free up BPF_JMP | BPF_CALL | BPF_X opcode
+a2ede520fc30372c03ce70bac6e122102202ff5d lib/test_bpf: Add tests for unsigned BPF_JGT
+3e9a781acfb6328e7b8b35c1112d574db9312bc9 bpf: add BPF_J{LT,LE,SLT,SLE} instructions
+94271f23d7553d5d2856fe7f3ce02975a18efd42 bpf, arm64: implement jiting of BPF_XADD
+7f9078115392bdb2d634e0c663992101d1688039 bpf, arm64: implement jiting of BPF_J{LT, LE, SLT, SLE}
+a43a07326bfc684141320e0ca5cad04ca8b35cad bpf, arm64: use separate register for state in stxr
+a7ed296a36f1412ba082fd94cc39015bce825907 bpf, arm64: remove prefetch insn in xadd mapping
+f65058e2895d498b8a6c4d9139b90c5292820482 bpf, arm64: use more scalable stadd over ldxr / stxr loop in xadd
+7ebaea589bc3da427141acbd779d3b204489d2fd locking/atomic: Introduce atomic_try_cmpxchg()
+ca0a10bdad3d712d6e9156c03a70eb1da0ba7eb1 locking/atomic: Fix atomic_try_cmpxchg() semantics
+71d0004c1040557c0e3f16c308114b242249d17e refcount_t: Introduce a special purpose refcount type
+1351b54eb2aeb87771680690c711b9f66e13b508 locking/refcounts: Out-of-line everything
+22764e0938071dd9ffc69f8337f3c9c858795f38 locking/refcounts: Add missing kernel.h header to have UINT_MAX defined
+f92ca62921a5fe7edb8f9fd71eff5213da323203 locking/refcounts: Change WARN() to WARN_ONCE()
+db48cac12ba58f6f6241455d71ecf6f7318cdb1c locking/refcounts: Use atomic_try_cmpxchg()
+66092304069c7b33a49985aac35a6a4ae91e6e9d refcount: change EXPORT_SYMBOL markings
+f7f97e207b92eb1863a552f74c2dcc081f72c3b4 locking/refcount: Add refcount_t API kernel-doc comments
+764f00369479373f8d76bb41c19b14ae43d12986 locking/refcount: Create unchecked atomic_t implementation
+ac11beda641b0589a3a4e7516cbd5018135eec61 locking/refcount: Remove the half-implemented refcount_sub() API
+ad0410fff309364fc2470691829ff7d85379a8f6 BACKPORT: arm64: barrier: Add CSDB macros to control data-value prediction
+26f7319864ab13f36b33ac01a193995e97b26c6a lcoking/barriers, arch: Use smp barriers in smp_store_release()
+39676ef6e67842b50825e7ebc4f36653d552a8f2 asm-generic: guard smp_store_release/load_acquire
+371081292935467cad84852894f379837a26d0ec asm-generic: add __smp_xxx wrappers
+132311cfc4217c86546716eecea72d920f6b4b46 asm-generic: implement virt_xxx memory barriers
+ada842f5fe9e69b457d9f39ea6e4335a8493082c atomic: Export fetch_or()
+d876c7ff4735200bc7f60dc5b828acad7ed70723 atomics: Allow architectures to define their own __atomic_op_* helpers
+9487d78ebf1017f7fdfa71071733ba193e98ae1b locking/atomic: Introduce atomic_fetch_or()
+e70b0c44e6f7f16da8d6af2d5e41dca7cd3c89e3 locking/atomic, sched: Unexport fetch_or()
+6ac35962bb9de44376dfca7a0e53f4a52219410c locking/atomics: Flip atomic_fetch_or() arguments
+08d9b9cd6cf15e3476e99d0a04323b7328030d5c include/asm-generic/atomic-long.h: force inlining of some atomic_long operations
+21d77c23c29ff4b7506a291fd9e6b0bdca81aefb locking/barriers: Move smp_cond_load_acquire() to asm-generic/barrier.h
+a67f4a5974234cbcf8c8b76d514991169ad648f9 locking/spinlock, arch: Update and fix spin_unlock_wait() implementations
+b0b7cac65733dc234f068104219438fe65a7768f locking/atomic: Implement atomic{,64,_long}_fetch_{add,sub,and,andnot,or,xor}{,_relaxed,_acquire,_release}()
+e4c766b7bc767ca9923a5bf63c06b879c75c14bc locking/atomic, arch/ia64: Implement atomic{,64}_fetch_{add,sub,and,or,xor}()
+c0780f708e8c34430ba9ba2823699a30265c0a55 locking/atomic, arch/s390: Implement atomic{,64}_fetch_{add,sub,and,or,xor}()
+f8a071642682599fb99dd69974adcb236d68092e locking/atomic, arch/tile: Implement atomic{,64}_fetch_{add,sub,and,or,xor}()
+dad56751e64bcf91d5a4971831e10de85ddcb1df locking/atomic, arch/arm64: Implement atomic{,64}_fetch_{add,sub,and,andnot,or,xor}{,_relaxed,_acquire,_release}()
+ab3af6e45392eb42f95fbbc3bf548d2171608e75 locking/atomic: Introduce inc/dec variants for the atomic_fetch_$op() API
+3967921dd85c6024bbc659b3eb3274dfd8569207 locking: Introduce smp_mb__after_spinlock()
+b74060c96a3b3c72f2aa52d1fb7189de46d2e2a6 locking/atomic: Add atomic_cond_read_acquire()
+b50d34bc15ede666ee76c8e6260cc54d8d851434 locking/barriers: Introduce smp_cond_load_relaxed() and atomic_cond_read_relaxed()
+8a1890ddadbbea265ef326ce80f53bf1026a8906 arm64: reuse asm-generic/barrier.h
+daa508a27dbdd1add20dc1fec7af4070f07d8e53 arm64: define __smp_xxx
+a38441c49c9e372c47cf0244ca1c1a80eb201475 locking/barriers, arch/arm64: Implement LDXR+WFE based smp_cond_load_acquire()
+a598d5d250bf1a3d9151de8971e8be08cb3a6a2f arm64: Implement array_index_mask_nospec()
+ceda2278e7ff314194752b2c593a4359be25534b arm64: barrier: Implement smp_cond_load_relaxed
+fa775aed401dfd9af65d8c4ef77525db612f1611 bpf: Align uapi header caused by false backports
+372d15c2c79ab0a5239d8818535caa5558df6b50 Revert "bpf: Remove MTU check in __bpf_skb_max_len"
+dff655a8080f204d5effbafc505abd6f9ec3705b Revert "ANDROID: Fix missing uapi headers"
+ca0340015f209abd5083628a4de82f7584ded3bf Revert "bpf: fix incorrect sign extension in check_alu_op()"
+4765e1fcde621bedf2ffe58cb04eddaf9a08ac08 Revert "bpf: reject stores into ctx via st and xadd"
+be43025f76400070c4261f7532d879765a2a3660 Revert "bpf: fix mixed signed/unsigned derived min/max value bounds"
+1c8188aea3ed6a45c1debc65dab64cf5cbb06b8e Revert "bpf, verifier: add additional patterns to evaluate_reg_imm_alu"
+acf895fc3102efe3291926ae812dc3ff81a3a7c6 Revert "bpf: fix mlock precharge on arraymaps"
+84728548b6b25220da4b3bf40ce9e379c5060c26 Revert "BACKPORT: bpf: Add file mode configuration into bpf maps"
+be65cd4ba8b9bdd24f84e5737dccc917cd29a4dc net, sched: reuse skb_at_tc_ingress helper
+1850c7e60de9f2127870614abd050aad5f8c66c5 net, sched: add clsact qdisc
+07679f2a67947b3a31c2b98109b7b9ecc7f61778 hlist: Add hlist_is_singular_node() helper
+a43015506deb6652d519a7bd11ec710bcb56e7ea new primitive: vfs_mkobj()
+ecab53afe74f154b3117141af0c9f732d8be1268 fs: Add vfs_mkobj2
+77ef31f6cce16ec86ffbb4064dd3af98924bd4ba nsfs: add ioctl to get an owning user namespace for ns file descriptor
+331cd6d90c7b922ae7d613ef8fb82b8a7834c9e9 nsfs: Simplify __ns_get_path
+60aae261b3e958e5e2ee4a85ca058c065b495125 net: add an ioctl to get a socket network namespace
+60d330b28c2ccd07e52c6829bf90a825d34d2780 nsfs: generalize ns_get_path() for path resolution with a task
+7c33d0a6e49caaa7af30c4eca181627661dc28e8 mm: rename __alloc_page_frag to page_frag_alloc and __free_page_frag to page_frag_free
+81cb5c63e6da32f222e75652e6a905a53d268e3b ptr_ring: array based FIFO for pointers
+93edef1f2a0247d66de9b1e44eb0d00f5c2915ce ptr_ring: resize support
+9ae58516e1919800786a8032bd7c02970d242ae6 strparser: Stream parser for messages
+234bfd2df9748a429bcdc5c17f3e3c8a655e615f net: strparser: Make it builds by default
+1545896508ff6b66a267aa8084a7a9aa5e2e4876 strparser: Queue work when being unpaused
+70ec67c82f5936b1acc976f055a020648e957a39 kcm: Remove TCP specific references from kcm and strparser
+6d97475b782ba19c8b6e46c345e71a50e48cd4e4 strparser: Hacks
+8c0f4278f24551cf0a4534a1b37d0182c56c1801 sock: tigthen lockdep checks for sock_owned_by_user
+be1beceffca2cefd08b1b560ad46f6ca32db7026 tcp: fix lockdep splat in tcp_snd_una_update()
+782de58cb6da2b556285c6b5271efc13ae1aef62 lwtunnel: autoload of lwt modules
+0555066c8efe6f8ff597064961520a6314df4735 net: sock: move ->sk_shutdown out of bitfields.
+54d885c03a990c194afc40a99e2ec6a484247c0d UPSTREAM: net: ipv6: Move ip6_route_get_saddr to inline
+00d62fee54ce4eba1b0bc8d1ec685537ec038e09 net: add ndo to setup/query xdp prog in adapter rx
+7e6d1a68302f9c8972442d242b95492a38222b0b bpf: fix implicit declaration of bpf_prog_add
+974b7d12bba1953b474a8a775ba9f4b5098bc880 net: cls_bpf: limit hardware offload by software-only flag
+8cab299d1a297761d38e8be40e85805a01e34390 bpf: add helper for retrieving current numa node id
+e5be5e977d4ecfbc1c143b89cf426e51b7034746 BACKPORT: bpf: Print function name in addition to function id
+8b3c90a94aa5f9f29f31907a24337d4d98685d9a BACKPORT: bpf, inode: add support for symlinks and fix mtime/ctime
+7d85ba1ddf85697f4123e8bc2c3120cfd25150bf bpf: Remove unused but set variables
+c4bd1f4647db8f926efed7eb656868bb96eb2a52 bpf: Use u64_to_user_ptr()
+aeb6eb006dffc2519cedb1a3543894aec7f591cf bpf: LRU List
+3de7a8aaf81e7006ff0b0b311128b7147cf07f17 bpf: Add percpu LRU list
+350ed7a889d4739d27aa19efccdd710c0daba245 bpf: Refactor codes handling percpu map
+47508d6a1245fd3739a1f221171e558ca696b192 bpf: Add BPF_MAP_TYPE_LRU_HASH
+beeeb55ab4b35201e65faf00851dc018dfaf6921 bpf: Add BPF_MAP_TYPE_LRU_PERCPU_HASH
+4da5e72176e861495480588d4f7f3d8ced0994ac bpf: Fix compilation warning in __bpf_lru_list_rotate_inactive
+f76330c11a7ca1fcd9905c2f3bd5b31be12d41a8 bpf: add __must_check attributes to refcount manipulating helpers
+155dba5c980995f4999606532b584690bfca0abc bpf: add owner_prog_type and accounted mem to array map's fdinfo
+4cb49214c8238bc007d85e32e09c1e783c3375ac bpf: allow for mount options to specify permissions
+88489f20e1df663af37d803e2506f03551bdf106 bpf: BPF for lightweight tunnel infrastructure
+c1ee52e2c74c738f6ac0cc019e26f1c1e42d65f1 bpf: Refactor cgroups code in prep for new type
+e31f9ffcf943ae6409ae73e7796da26d3f602dae bpf: Preserve const register type on const OR alu ops
+62654b2ef4fb7b4799ae525aa30cbb8cb67b4cb0 bpf: drop useless bpf_fd member from cls/act
+b7ea69fba81040bf3b2ef201fcb4ec493170904a bpf: add prog_digest and expose it via fdinfo/netlink
+c30966e3e0ed79cc24a556a7daefe16a959aa4aa bpf: fix loading of BPF_MAXINSNS sized programs
+db561e68cb14403bca3caabadd08a84a15b23f4b bpf: xdp: Allow head adjustment in XDP prog
+1500cbf86eb9ba54f2f5c8ea161f69c31037c385 bpf: Add support for reading socket family, type, protocol
+86f32559dae7117bb40db244becb380e7f5149a3 bpf: dynamically allocate digest scratch buffer
+4d36657b2ed7e9241498e3cde2766ab8999e852d bpf: fix overflow in prog accounting
+df9a1441c66bc31d2b15c5f6fa6b6e2105a2c81e bpf: rework prog_digest into prog_tag
+5f83044c33f47431124e2f44dc7a3456371f7ad4 bpf: add a longest prefix match trie map implementation
+87041015ec54f23b98db00d1155981b52a1394c5 bpf, lpm: fix kfree of im_node in trie_update_elem
+60a9fba1b98f33bae58d063733316bc3da16cac5 BACKPORT: bpf: remove type arg from __is_valid_{,xdp_}access
+aebae6cd28bb03bc219b6ed79e54d1c1710915e7 BACKPORT: net: fix sleeping for sk_wait_event()
+606058adff180ad70e7b063c8a305b6d5e837156 bpf: enable verifier to add 0 to packet ptr
+57c9dad690b238fc0ec585d9b07f468aa6bfbb84 bpf: fix wrong exposure of map_flags into fdinfo for lpm
+6c679ccf16cdd6f31597563a854ccb9d06d6ccc9 bpf: split check_mem_access logic for map values
+219f7d12d451ca6465d8d5704ec784b293a244f9 bpf: allow helpers access to map element values
+7eaffee7d50758b182347bdbb6b460b3f32fc3b8 bpf: allow adjusted map element values to spill
+59b519ce97538c613d4b9e436bff098cae44fd67 bpf: allow helpers access to variable memory
+5f4348c337efe62ff72e048c6fe5f8e87b1bac4e bpf: rename ARG_PTR_TO_STACK
+3f9e9ac7f501d003e50b88c947a6310953a604be bpf: Remove unused but set variable in __bpf_lru_list_shrink_inactive()
+518f67802918dbd45ae124c22f49cd06393f9940 bpf: Make unnecessarily global functions static
+f2194d89874a4c2f70d7d2cc34aeef6f3a0c7fab bpf: don't open-code memdup_user()
+eab58965b7189a7e6fa2d9a2e7109e3690c364a9 bpf: add initial bpf tracepoints
+998bdb2637d0202165283966474a7b503b72e4b3 bpf: add get_next_key callback to LPM map
+37d36ba6557ec02ff428c6d3507135d252bfe863 bpf: pass original insn directly to convert_ctx_access
+cb2eaa44cf6bac69283f0ed06f3371371d3962ea bpf: allow b/h/w/dw access for bpf's cb in ctx
+9bc226def7d180ea21b0ed435bd00b9a116aa21c bpf: enable load bytes helper for filter/reuseport progs
+d75b3575a563bb73e159dd787f98d4254a6da6bd bpf, lpm: fix overflows in trie_alloc checks
+64e466f09d6b6c205e9d28ca9f5997dd68089266 bpf: reduce compiler warnings by adding fallthrough comments
+d9e142d0469f6a19f813c74a7c43a8fba896bab6 bpf: mark all registered map/prog types as __ro_after_init
+70cf65c603ea9efc2b5d9b392e885a527ac06030 bpf: make jited programs visible in traces
+059bb6e47a7023b30454718a2bfd65cab15e6be1 bpf: add helper inlining infra and optimize map_array lookup
+5b90bc5f26423e6920a9028443cc7a539c605a00 bpf: inline htab_map_lookup_elem()
+9858585c99a16d25000ff2f2bf5f49d934de0148 bpf: fix hashmap extra_elems logic
+6f1924450f32504e4028ebd018ac3e513a220bae bpf: Fix and simplifications on inline map lookup
+6e4df06061f0c6bdcf17019659414b4389db6d04 bpf: Add array of maps support
+5268414f1742068add367c4e1c96ceeeb722be1c bpf: Add hash of maps support
+8265f9a37a495c672f18548d8f2b577b7da515cc fixup: bpf: convert htab map to hlist_nulls
+ecd9b62f519b35e7e0de97348df54fa2560e70a4 bpf, verifier: fix rejection of unaligned access checks for map_value_adj
+ef35db4731d9cb75fd40183a87417439e5f4300e bpf: introduce BPF_PROG_TEST_RUN command
+cd356a5c9ad67e0f9aa39884527724917bfe2a42 net: bpf: linux/signal/sched.h wasn't added, use linux/sched.h instead
+3475b9e5cfabe25116085ad0c7d295146d665b37 bpf: reference may_access_skb() from __bpf_prog_run()
+f8b8a3b8cf09deb83d679739eefdb9709fb2c82b bpf: remove struct bpf_prog_type_list
+a9895796ad80cbd8d1c00a3ac3e1f2dae6099255 bpf: remove struct bpf_map_type_list
+5f9db0739db94d537f823a21855a3671821e6b24 bpf: lru: Lower the PERCPU_NR_SCANS from 16 to 4
+f6722d9eab409aa3fe7be972600915114bbfbf2b bpf: add devmap, a map for storing net device references
+acd7aee63c39f94e01e41b1bdd4d26208ba8dda3 bpf: permits narrower load from bpf program context fields
+ae2ca058f99aa3944c3cda70fa1671ca82850d63 bpf: possibly avoid extra masking for narrower load in verifier
+4cd6a9b57210c9dbbaf9cd20a0d76e3e1262acc8 UPSTREAM: bpf: Add syscall lookup support for fd array and htab
+5f326b8eda74a7039d394461bf8c38bbb511332b ANDROID: net: bpf: Allow TC programs to call BPF_FUNC_skb_change_head
+3b1de9b2373bdcf8644b8e8b79d6b5de97b389c6 bpf: teach verifier to track stack depth
+a5b6d0206d59b292872117ced4e00f41a7f19ab9 bpf: Introduce bpf_prog ID
+5e330d30e40274a0c6a02d48474f12b0e353db9d bpf: Introduce bpf_map ID
+dae5383a45db9ea1ad8d781945d4d643fdb54dfc bpf: Do per-instruction state dumping in verifier when log_level > 1.
+05b6706000900bd71817bac5a15421454722614c bpf: Track alignment of register values in the verifier.
+df4b67a00f03bdbc399a5ac134687a802b77adb3 bpf: fix mixed signed/unsigned derived min/max value bounds
+c97f61929bfb735291e102abc4a9a2921039c735 bpf: Add strict alignment flag for BPF_PROG_LOAD.
+d6866dd6c50ca23dffdbf730c5c4b177f37fca16 bpf: add bpf_set_hash helper for tc progs
+dfa19c0cb3950086bc15898c6ab0fa5990bae542 bpf, net: add skb_mac_header_len helper
+05db42b4a8466e1d8ef319978fbc38b1fbcfbb66 bpf: reset id on CONST_IMM transition
+f6ec506303153b38cc355b95b34315d92feb5744 bpf: bpf_lock on kallsysms doesn't need to be irqsave
+d385b5a288e0ccc71a92cd9c5d756debe084bfd1 bpf: Add BPF_(PROG|MAP)_GET_NEXT_ID command
+3b91090f62c177d98170b34cce5abd11099b2a59 bpf: Add BPF_PROG_GET_FD_BY_ID
+01675fbdb274ad25aa5a845c2e44a1c71f0c3513 bpf: Add BPF_MAP_GET_FD_BY_ID
+58df31c8d5cb7a3f3a5ef9a83200a056a34cff01 bpf: Add BPF_OBJ_GET_INFO_BY_FD
+25d14e3aeb2612bd58753ec310f5a026992320da bpf: BPF support for sock_ops
+c70107fb6c61a9ad32e10b0c2a7ea82227adf470 bpf: cgroup: Merge 9e61c87b. changes.
+342e26d5b87de0496fe4ea95b214a8237e1c32fa bpf: Add setsockopt helper function to bpf
+a1674d2edfaa0f67391db27acb6c7a4e7c1aba05 xdp: add bpf_redirect helper function
+62ddd68d3c9504be149810fb8ccae95ec6ca2d75 BACKPORT: bpf: add bpf_skb_adjust_room helper
+f84f6a2d8166b273ddcf68eebb675d4ee8134482 xdp: add trace event for xdp redirect
+999b1f18f20438ad4600f03e1bccc183db7dd123 bpf: add bpf_redirect_map helper routine
+add4fad9f997070059c1fcf95d0c17be5d121398 xdp: Add batching support to redirect map
+ad0ee5b40a6807e6152c2533af775e71c8218599 bpf: introduce new program type for skbs on sockets
+cf4739eef5aabbd0f8ab876d1ddf6c7d127bb244 net: fix build error in devmap helper calls
+9a4ad60048cb687a33ba75a420981742bb5f559d net: Define MIN_NAPI_ID
+d15b08475140bf975a6d2c78bc92a0c880981b8c bpf: simplify __is_valid_access test on cb
+60785a5f08b2115fd9f212bb75da034536a7f9f6 bpf: add napi_id read access to __sk_buff
+e1db4340de77b3a8558646e69a9e1c561b9a54ed bpf: simplify narrower ctx access
+f93e4d0ab53361cb6ed587736df1a6500866ea92 bpf: reset id on spilled regs in clear_all_pkt_pointers
+d65068708e0f3220a9614251e97e9f80ddc296f9 skbuff: Function to send an skbuf on a socket
+b2794012d5fab5751fc5b36519b1aa2c5770fb1a proto_ops: Add locked held versions of sendmsg and sendpage
+8aabf62468b80705aa6a2bbdc0dd041f19965d30 bpf: Move check_uarg_tail_zero() upward
+3a2644efc36d468e4229d015d164ac90e3971c0b bpf: Extend check_uarg_tail_zero() checks
+cbffe73f30f6ec2e210648463425bf006ed87424 bpf: export bpf_prog_inc_not_zero
+f3ac7a4ee60da24d331ffe157731a26d60152cff BACKPORT: bpf: sockmap with sk redirect support
+dc005262e4f8cc3deccc15f1a765c3bf3771147f bpf: sockmap state change warning fix
+72a0f5df7210b9dc801e116a7734d2835fcdfd4d bpf: devmap: remove unnecessary value size check
+a1dc13e2183bd75d9212f4671f257a2f58d3807e bpf: sock_map fixes for !CONFIG_BPF_SYSCALL and !STREAM_PARSER
+b06d74ee59b631076915871d1921bccc70311819 bpf: don't enable preemption twice in smap_do_verdict
+9b45899ae967cb643ba8fb4e3f9a2d393e4a6170 bpf: Fix map-in-map checking in the verifier
+2cba9c5427c3851f93a754cf7af385f4a1d6940c BACKPORT: bpf: Allow selecting numa node during map creation
+a610eb7b60cce7e6a3e7b927a8ef608218489894 bpf: linux/bpf.h needs linux/numa.h
+68265d50ab31c53ef51791c736acc6c3cdb2c8b6 bpf: make htab inlining more robust wrt assumptions
+7c3c4e7e7583fbecd03f387959be4c881fd8865e BACKPORT: bpf: convert sockmap field attach_bpf_fd2 to type
+e9e548670740b49694e502e5ae5f0c1724d5d618 bpf: sockmap, remove STRPARSER map_flags and add multi-map support
+573dbe65fe248ec4b31ab3c189e69310b97cefe9 bpf: harden sockmap program attach to ensure correct map type
+250a9122e2a64a8f4571781c219f6691a5214fc1 bpf: Enlarge offset check value to INT_MAX in bpf_skb_{load,store}_bytes
+0aa3f55ae4faf9a2e8a3b1042319d94286e2ce48 bpf: Set mac_len in bpf_skb_change_head
+41d2ac04a22c4dd42058c96a7d7addbcd8652bdd net: add notifier hooks for devmap bpf map
+c23a52a22eac183dc7325279300f878951c20d44 bpf: devmap fix mutex in rcu critical section
+ae7ec589c3e9894a85b1a02c4cbc33f79ac9ca30 bpf: fix double free from dev_map_notification()
+aa3f27df116356ac0932a78f634afa2791c24f2e bpf: fix map value attribute for hash of maps
+dfb0b4c30d3993ba34c75e6fca80d071d610d0eb bpf: minor cleanups for dev_map
+fec1d834373fca952021a6541e19850c29485d33 bpf: fix splat for illegal devmap percpu allocation
+931988ee82911c7e22fe8f5e31283de356a74f99 bpf: properly reset caller saved regs after helper call and ld_abs/ind
+015da2777450afa90ebdf298bb946aa62818dcde BACKPORT: bpf: Add file mode configuration into bpf maps
+b06fa2bdeb5fc7e48730f71359281b560337ca38 BACKPORT: bpf: Add name, load_time, uid and map_ids to bpf_prog_info
+09f24766a294d3ace1f757781bbbaf81cf704591 BACKPORT: bpf: Add map_name to bpf_map_info
+fce306881b851b27fd105ec6b0c2a8fefee9bb04 BACKPORT: bpf: Use char in prog and map name
+a5a4bedbdcf4df5e8c28dfd140957ade5f834884 UPSTREAM: bpf: fix incorrect pruning decision when alignment must be tracked
+b633141c5976578d08be50c96a8fb374ec6ee39b BACKPORT: bpf: encapsulate verifier log state into a structure
+f090d9ae9cade98486056726d7896cfd67e342e1 bpf: fix subprog verifier bypass by div/mod by 0 exception
+6332c0c0f7d13c722bf30a7b858de0cdfbe3fe2c bpf: Fix 32 bit src register truncation on div/mod
+b9985b9ce7977c708aa9e9e5b4bc6891663bf9c9 bpf, lpm: Fix check prefixlen before walking trie
+c2aeb3da8dc5dc5ab2480832208162e5eea44815 bpf: Fix hashtab overflow check on 32-bit arches
+360f57b66f64351b9ba36f9c4015386c508db93d bpf: Fix stackmap overflow check on 32-bit arches
+66c251d23f0ea04a15aaa565389a6a0327739ec9 net: Allow sk_filter to access get_socket*
+380803a214167d49ffa54bd3926f76df3f3feb11 Add uid and cookie bpf helper to cg_skb_func_proto
+b3242d9d01ebf62836f14424b3d5e813579ca2e5 bpf: remove cg_skb_func_proto and use sk_filter_func_proto directly
+e7e0ed274a3e7fe00437a6884445a7537c4ed522 bpf: drop unnecessary context cast from BPF_PROG_RUN
+3f9ea5af93fab32511ac63c21d8bc098c98c1335 ipv6: Fix SO_REUSEPORT UDP socket with implicit sk_ipv6only
+cc4ae70f5f3f77a153be98cdf5c9491eddd31e90 ipv6: move stub initialization after ipv6 setup completion
+b43e857d01dea77ffaca295109fd10edc242a5bb bpf: Add mark and priority to sock options that can be set
+9ca7273f5383eb7662a0e182c492ce28cd91acae bpf: dev_map_alloc() shouldn't return NULL
+56ee9698b6ccff7859e162efa3ea1f1ac02652b0 bpf: don't indicate success when copy_from_user fails
+c9695ec3054da816ae738df021a5ae43f2d83481 bpf: fix bpf_prog_get_info_by_fd to dump correct xlated_prog_len
+0f99e2830ac67b7eabf9fd0bb0ddccf6131bcd14 bpf: enable verifier to better track const alu ops
+ed785670f904d0fd653b984cf20d2af3cacbf633 bpf, verifier: add additional patterns to evaluate_reg_imm_alu
+e3db35f4362542cca647f090be6d21dc122fb20d BACKPORT: bpf/verifier: rework value tracking
+d611c3281c7103457fe9d12d0d9c9dc929ff2165 BACKPORT: bpf/verifier: track signed and unsigned min/max values
+05bea10189d75e6947da5a076b5ebf216e24cbd1 bpf/verifier: more concise register state logs for constant var_off
+401303167dc24cf72ce2d0b80ee8231827482b64 bpf/verifier: increase complexity limit to 128k
+ffdeebebc03dc4307ba3dd32a8cd2174f3cb8aac BACKPORT: net: bpf: rename ndo_xdp to ndo_bpf
+1f4c67e7fac6092e9bc999f323f4d5640fb5e911 BACKPORT: bpf: enforce return code for cgroup-bpf programs
+61d5518167e4c90f404b917c09c2fcabf9d95bf1 bpf: Fix incompatible function pointer
+7d633f4e7baeb5c68cf49bfafa1490ab0a96b46a Revert "bpf, arm64: use more scalable stadd over ldxr / stxr loop in xadd"
+6af95070d566abeb62efd7722f2467306303607a Revert "bpf, arm64: remove prefetch insn in xadd mapping"
+db834891f4ffcfaa876f8caefdd35ff0abe17ff6 Revert "bpf, arm64: use separate register for state in stxr"
+5505f7c2d179dfa52cd5c486ec63c18a2114770b Revert "bpf, arm64: implement jiting of BPF_J{LT, LE, SLT, SLE}"
+bdeac97b108af2b5892989ffb7fdd066ce8be451 Revert "bpf, arm64: implement jiting of BPF_XADD"
+ddfa8241193a5d4a74016e890d216a802778eec2 Revert "bpf: add BPF_J{LT,LE,SLT,SLE} instructions"
+c5f89064319b7a7e0c587b209709bfeab7c734f5 Revert "lib/test_bpf: Add tests for unsigned BPF_JGT"
+a6956e5bc53a08bddf35b6fd57b0fedf95822bd2 net: Add helpers for 64-bit aligning netlink attributes.
+b0b0fccbe9d2b7da57b91846515e5ff82bf61a6a net: fix HAVE_EFFICIENT_UNALIGNED_ACCESS typos
+c1f0c06f05a313c559ceecd83d7f2a7939b0a956 net: nla_align_64bit() needs to test the right pointer.
+f983d039f441d0daf11993f2589e414f045c41c2 libnl: add more helpers to align attributes on 64-bit
+ff5909921173b591b19d76f8ff4395dba7c7d935 libnl: add nla_put_u64_64bit() helper
+f8420711ba73eb8c167c11f24376d2ede9b0a61d tcp: replace cnt & rtt with struct in pkts_acked()
+ae6b93011e31988893a4bb4d71e17aba0ea184e9 tcp: refactor struct tcp_skb_cb
+874e5c3a1dd4c6f4177de0164319c13a33c472e8 tcp: add in_flight to tcp_skb_cb
+2e72dc40f01ac346e28556e7869f2c4e4f3482c7 tcp: retransmit after recovery processing and congestion control
+40c75267f9e203cca91f3ba44b4abef20a61b9b6 tcp: move cwnd reduction after recovery state procesing
+53de719e6a0445daf7610272bf94ec5838aa3fef tcp: new delivery accounting
+6a93056add81c43dc76cd741a908a40b4d49a747 tcp: count packets marked lost for a TCP connection
+d80ac58be596694f243c84b18f32f97f067e4a82 tcp: refactor pkts acked accounting
+c0fb9fdb8fefddd499592cc893b0d03c693cf760 tcp: make congestion control more robust against reordering
+2d9786ceac286c3e18bb33a25588ff8440f62bd9 tcp: tcp_cong_control helper
+8b4385e57446e3c87921362b2f800ca2abc31fd9 tcp: Merge tx_flags and tskey in tcp_collapse_retrans
+7542e98d5926a22e57e2d71c3cad2efb49f74cfe tcp: Merge tx_flags and tskey in tcp_shifted_skb
+9016e8c7bf574bbaff67c97fcd61c1465d117ef9 tcp: track data delivery rate for a TCP connection
+7f514d8e61d529b2d07ac787507a1b1be5b21963 tcp: track application-limited rate samples
+c7741027984a262b34baad8523813eea5a729454 BACKPORT: tcp: ULP infrastructure
+922116814911d63a2d43d5839de2e0721f38be77 tcp: fix out-of-bounds access in ULP sysctl
+a1fb4db25cd62ccf2ef7367a2efb7e2808615f64 tcp: ulp: avoid module refcnt leak in tcp_set_ulp
+7152a98418ec4832385fa4744861498226b20767 tls: kernel TLS support
+af82a9d21fb9dc11f05eb751260fcdc2165890ec tls: return -EFAULT if copy_to_user() fails
+a3580a94f8c5085180759dc28b30ff781bccc0dd TLS: Fix length check in do_tls_getsockopt_tx()
+21d37b02fe880aa8f13e533cbea9315c5ab3b6af net: add a UID to use for ULP socket assignment
+203816ff05e1e0d2b8bfede0b61254bc88dabc5c tcp: switch back to proper tcp_skb_cb size check in tcp_init()
+4e77f15e60ccdd597e1a7dbaba50f6d4545422b0 sock: make static tls function alloc_sg generic sock helper
+55eee4842a02e6639c428d779c966bc5bba01130 net: generalize sk_alloc_sg to work with scatterlist rings
+d78154a5b5d1eea9a1dda63e2b2f53505bf7722e tcp: export do_tcp_sendpages and tcp_rate_check_app_limited functions
+db985b7a1539aaae77ea3b01598021d37d6cee68 locking/refcount: Always allow checked forms
+1e28d94e1dc0fb13455c3915459e63e76a5e0d96 iov_iter: constify {csum_and_,}copy_to_iter()
+3fb5d7e20f55739b309b43310afc89c046c7aa3c fold checks into iterate_and_advance()
+e427b58a43e7573e3ad43051fa5e40a1a327f498 do "fold checks into iterate_and_advance()" right
+54c4c70b5fa1e5faddee60a325495f55331a25c8 new iov_iter flavour: pipe-backed
+06e2d2837007a35f3577df5002f2ab73480a2a57 [iov_iter] new privimitive: iov_iter_revert()
+609dda96687c2597cb1f9506d144619632709297 fix iov_iter_advance() for ITER_PIPE
+692d2527fd8cab6ac6e0c151418e0adce55fb825 fix a fencepost error in pipe_advance()
+d1ca5262b8ba3e19e2e2fc1df355b5b3ec782b9b bpf: verifier: set reg_type on context accesses in second pass
+9f3ba30c76ae2c9ec590c5d1ce6e6ab9b6add89a bpf: split verifier and program ops
+5d4fcafe702c172be5efc9eda198ccd62470f094 bpf: remove the verifier ops from program structure
+3b771db3b24b34d270d1997c3aac44aebb0d7d55 bpf: Fixup "selinux: bpf: Add addtional check for bpf object file receive"
+16c2ed125635942dcea6722796c0d4d3737d6522 bpf: move knowledge about post-translation offsets out of verifier
+e23aadf52b9bfee61e55e6d478790663988bc3b9 bpf: sockmap update/simplify memory accounting scheme
+f6426bb4ca09fea81d8f81012395a8e64efc6b5c bpf: require CAP_NET_ADMIN when using devmap
+65bb502990481cc575243ba037e8f0bc3dbbe833 BACKPORT: bpf: offload: add infrastructure for loading programs for a specific netdev
+6c53cfa033bf7c36fd7572be390137d2ccb0acf7 bpf: offload: rename the ifindex field
+2348ee136ae8d0d10c036b47f9d9898d8da7323b BACKPORT: bpf: add support for sockmap detach programs
+8b4187e4109732ea86bf1ba38865052be5e2a88d BACKPORT: bpf: enforce TCP only support for sockmap
+6adcce8846a02c3eeae10f54dbec8c0d99adc2ff BACKPORT: bpf: avoid preempt enable/disable in sockmap using tcp_skb_cb region
+c666f12d90275683f8bdc4f8408a67c23e10f67c UPSTREAM: bpf: require CAP_NET_ADMIN when using sockmap maps
+7dd35570996cd24c89c312a74cb356526aef95bc bpf: devmap, use cond_resched instead of cpu_relax
+cd07fb56b52af8955a5a1d9cae51db5ba0de922d bpf: devmap: pass on return value of bpf_map_precharge_memlock
+298443a19dc1f1a98ed6755eaa97f320027bf152 bpf: do not disable/enable BH in bpf_map_free_id()
+ee886f5f061c5ebec6594e8b29a12ccef5721838 bpf: devmap fix arithmetic overflow in bitmap_size calculation
+2222c5b5b2507b9aecc9dba963672b9103dad110 BACKPORT: bpf: introduce BPF_PROG_QUERY command
+02e86e88e42b851bf67606eacacc5ab01e0de197 BACKPORT: bpf: introduce new bpf cpu map type BPF_MAP_TYPE_CPUMAP
+3ebd92a627c9b4e8e4b4869d4d169b9f046f436a bpf: add map_alloc_check callback
+c9b0a0c39311deba402d30f918d0998d86cac174 bpf: hashtab: move attribute validation before allocation
+f1af2df1a5417304557225c5634b066e20e34e36 bpf: hashtab: move checks out of alloc function
+ec81c84160782902e5c64cd53402125e7dee23c5 bpf: add helper for copying attrs to struct bpf_map
+89a171ddace7f3cbe443edebc35a573923446381 tracing, writeback: Replace cgroup path to cgroup ino
+4fa9a90c6b9b69fc67943f703196a7d45be3c4b0 BACKPORT: kernfs: introduce kernfs_node_id
+a921b02a3175ff0c5cbf8cbaceb71ff5055641af skbuff: Extend gso_type to unsigned int.
+aa5878e198deda182b4111429d12e230c69589ba bpf: add BPF_J{LT,LE,SLT,SLE} instructions
+9c4e2fcb84ecdbff1bbb3897aa2b2fbf44079c86 bpf: enable BPF_J{LT, LE, SLT, SLE} opcodes in verifier
+b71bd82a4e1b6644a95c3960f8c172b5f7912be2 bpf: Collapse offset checks in sock_filter_is_valid_access
+24b6daaa395340a5c7e422ee6610e7f8afa1313c bpf: split bpf core interpreter
+84665f3153c471f8b5af2ff266a620e2ad688606 bpf: use different interpreter depending on required stack size
+970fdec68d46a94ee12642564c0f7bd9dd03e411 bpf: Fix out-of-bound access on interpreters[]
+895673007c71b5826d78b044e900b3de38a084fa bpf/verifier: track liveness for pruning
+2f919afff3182bd0e67ab5b39e52222f36a5beab bpf/verifier: improve disassembly of BPF_END instructions
+3d5175353988440d584bd52c35ef78ae98c64c22 bpf/verifier: improve disassembly of BPF_NEG instructions
+26ea77f5a716a693afd4a61ceb93bf9bff49f50c bpf: fix liveness marking
+2b2cb8ba7026a6bdf0e1ab86497912a5eb23afae bpf: sockmap missing NULL psock check
+c54b3bb01194244b4136fe2918ebe838f8b74a6a bpf: bpf_compute_data uses incorrect cb structure
+13a694ccae34a309921ec0cfade0a3e004c8ade8 bpf: rename sk_actions to align with bpf infrastructure
+c5b2f03a24eb4bf7f49f60d90cb5685b0f0f360f bpf: remove SK_REDIRECT from UAPI
+1ece96b450ad636d6eba80478ffe61471a4b917b net: socket: add __sys_setsockopt() helper; remove in-kernel call to syscall
+1ab710f71f82260800ca6a562b93ec8be42b08e3 net: socket: add __sys_getsockopt() helper; remove in-kernel call to syscall
+b451a61415d5afde405d74491c44e5e617bff535 bpf: avoid false sharing of map refcount with max_entries
+da260c0228cd6e3f34d7eb7dc7687460dfe0051e UPSTREAM: bpf: Do not dereference user pointer in bpf_test_finish().
+3f672330ee2277a2bcacaba4ef562f8ef75fc7bd UPSTREAM: bpf: Align packet data properly in program testing framework.
+d9c856adf0b94bbcd18837c3af965541275411c4 bpf: rename bpf_compute_data_end into bpf_compute_data_pointers
+a25424182045a316aa14db687911e5e9ea5f568d bpf: add access to sock fields and pkt data from sk_skb programs
+90c1158dc8680201c500a218eb8729ada23c2b5a bpf: sockmap, fix leaking maps with attached but not detached progs
+367e9fa3f255d71c061039d1ff21a7a5aa65f335 UPSTREAM: bpf: fix memory leak in lpm_trie map_free callback function
+1f499eacf1e50766944ac00f424eaa84393b1e04 UPSTREAM: bpf: fix sock_map_alloc() error path
+2fd6d44160679bcd963189ca1c5b13191973c96c UPSTREAM: perf, bpf: Add BPF support to all perf_event types
+0511513c49539c1dab32020d8e5b58022f3fd01c BACKPORT: bpf: add meta pointer for direct access
+a4fc3c379b6412b55523a2cbb06e9e4797b47d37 UPSTREAM: bpf: making bpf_prog_test run aware of possible data_end ptr change
+7383744182dbcdd2832956fb2fd68bfe56304dc0 BACKPORT: bpf: fix panic due to oob in bpf_prog_test_run_skb
+9dc37aa5f9f692de2e13c566736e30586eb0f86e UPSTREAM: bpf/test_run: support cgroup local storage
+9b139ae2e54eb30db38b0a2d5c329e300813af5b UPSTREAM: bpf: perf event change needed for subsequent bpf helpers
+8ae5a58ddfc180009d8194ea80b8c0c425c9d883 BACKPORT: bpf: add helper bpf_perf_event_read_value for perf event array map
+2c459c0586f23f876a9482ce31eff93743162f67 UPSTREAM: bpf: add helper bpf_perf_prog_read_value
+670c6c9ae1ecc2a08a1d170172c0e5a364b2e9fd device_cgroup: add DEVCG_ prefix to ACC_* and DEV_* constants
+f63635c05a383eb00724302976f480a166895167 device_cgroup: prepare code for bpf-based device controller
+0ee84a6be2ab1f41e71889665a96d8431e1d1798 BACKPORT: bpf, cgroup: implement eBPF-based device controller for cgroup v2
+6eedefd14c98e17d3fae81a9c1d9e54f8d6dc4bd bpf: sockmap remove unused function
+b9c3c78009762762dd86a68b7cf0407dab0470c2 bpf: sockmap, add sock close() hook to remove socks
+8515da283f48d7f7c659896896b50dee6b75fae3 BACKPORT: xdp: base API for new XDP rx-queue info concept
+4dec1ceae6e66e9a470e7b620366b6cbdd0f7304 bpf: finally expose xdp_rxq_info to XDP bpf-programs
+f5f03b1ac708797d1424c4a23c12f2fd55ecf4ad BACKPORT: bpf: Adding helper function bpf_getsockops
+eac1e667e68d7f01ff308e3b7be840f25c13214a bpf: allow disabling tunnel csum for ipv6
+47f1f16f8a17ab082ada0b60c4224c1e8c2413b5 bpf: move bpf csum flag check
+e6678fd48bf5b428e8069d59a700409564f06b9c bpf: Add access to snd_cwnd and others in sock_ops
+0583ac8625f8c990385f2120a06d9c1f1ab7409d bpf: Only reply field should be writeable
+da4e484e48e70bbf448a0edb6e6269dfa83925fa bpf: Make SOCK_OPS_GET_TCP size independent
+bd2a9dbce7f944ebfd7330dfc4d0531d9d5c4ec1 bpf: Make SOCK_OPS_GET_TCP struct independent
+591c784f5478cc4f3bef65d08e799f336ce077c3 bpf: Add write access to tcp_sock and sock fields
+1e81d774d649876ff70103d07336f64b96a8a1d5 BACKPORT: bpf: Support passing args to sock_ops bpf function
+4993e521d1c9636dbe10883ce2bba747cfcccaa7 BACKPORT: bpf: Adds field bpf_sock_ops_cb_flags to tcp_sock
+ed64bb3718b15b1fc8033eaa0e64c8f020b05d73 BACKPORT: bpf: Add support for reading sk_state and more
+1591caeba92d279882bfc3cfcd3ca05e25bee9c5 UPSTREAM: bpf: clean up unused-variable warning
+2646777992166e19183a19af54a352494710e45a net: do_tcp_sendpages flag to avoid SKBTX_SHARED_FRAG
+8577231f38c090124d5a3e5ea5403e3192b66e3d bpf/verifier: when pruning a branch, ignore its write marks
+53823929f9e27da9ecee5b0093324448e75bbe90 bpf/verifier: remove varlen_map_value_access flag
+fb100156535d8454635c182d14034c4d6babc466 bpf/verifier: document liveness analysis
+64f13ce63b52bc5feb852bcc92598cfcce0ec42b bpf: netdev is never null in __dev_map_flush
+360b694b76872f853e9ab31e93a5445afbece241 BACKPORT: bpf: move global verifier log into verifier environment
+8efdd6d3ef9237ee74ad40b455d5b48fd2339b30 bpf: move instruction printing into a separate file
+b7122bc260994960ec63c1a2dbb4514147d56238 bpf: write back the verifier log buffer as it gets filled
+8608052a7db1af58a6dcaf0e5da0596680756b9c bpf: don't check spilled reg state for non-STACK_SPILLed type slots
+d8bc89dead9f7d0a1f72d5b02a389c0e35e6c7bb BACKPORT: bpf: reduce verifier memory consumption
+305d003faf5c4218a91ac810b19d9bc8366b2f38 bpf: fix verifier memory leaks
+0aaea72276485d42a8c9422967891d8c9aff2351 bpf: reject stores into ctx via st and xadd
+c30598b69cf449cd329ea694cb4acde12b04231a BACKPORT: xdp: remove bpf_warn_invalid_xdp_redirect
+7f58d7650ba21d113a86ec3961bb61bc9eb2529f bpf: fix verifier NULL pointer dereference
+4206d886e752dacfb8e4a5cdaee0f8ff88dc8554 sockmap: convert refcnt to an atomic refcnt
+73916221bdad003743539944928ea4fadb28dcbb BACKPORT: bpf: create tcp_bpf_ulp allowing BPF to monitor socket TX/RX data
+bb71f6c2c1857693706883ff2550e866cdf6c00a bpf: sockmap, add bpf_msg_apply_bytes() helper
+cc871bf7c50f47f7e83d48874d55ae1c48ea1426 bpf: sockmap, add msg_cork_bytes() helper
+9a376fc58528296e5c95ceabad6a9cae6f642d17 bpf: sk_msg program helper bpf_sk_msg_pull_data
+a3a4f1ba0b5865b2f6965b0b9b20c78bd53167aa bpf: sockmap needs refcount
+a362b22edaea18cb4a6b026de0ca22e1c3e39ab5 BACKPORT: bpf: remove old offload/analyzer
+7caacb79a339bbe3af3d2411274a7accf0ba3678 bpf: improve verifier ARG_CONST_SIZE_OR_ZERO semantics
+3e0b7fbc40a4b6f4854883a0ea0219793525956e bpf: introduce update_effective_progs()
+4e4708d912788dcc7c0b6f59512f694e5b59b5dc bpf: Inline LRU map lookup
+2b3cdc98ac375c424f608aded4d999dda2ba3360 bpf: Only set node->ref = 1 if it has not been set
+bc7b8e2f84d3f367770ea02671e4d9c618ee8bfb bpf: Address KCSAN report on bpf_lru_list
+75efa693562fdeca4ac39993a6ca86cadcd0adaa bpf: improve verifier liveness marks
+3b22033905b0bcaf655cdc2bf4d3526cfada0988 bpf: introduce ARG_PTR_TO_MEM_OR_NULL
+ac7d0533657d60c684f309dde718064be72b790c bpf: introduce function calls (function boundaries)
+7172e940d9bfacdfc9982c936367215ed9f8c95e bpf: cleanup register_is_null()
+c3981859891513d7fdedb8890ccd0bc5fdf40838 bpf: Merge upstream changes
+4fd116f1cb72b75f7cba6034702ef8df1d7fd185 bpf: also improve pattern matches for meta access
+34538ea223dfd603481a20022038393a19839811 bpf: fix stack state printing in verifier log
+19f2f5b8db6742628a48b0b5675f55b5bc1e786e bpf: print liveness info to verifier log
+a084b813ba1e10557a735e88a57d21e0a587865f bpf: introduce function calls (verification)
+5c5ed085514b3ff4abb03a3025bad328dacdd34e bpf/verifier: improve register value range tracking with ARSH
+22fc0750e64ec6e5795e2657428d10c60c8b1956 bpf: Fix incorrect verifier simulation of ARSH under ALU32
+46be979c0a76ff7110051410614d6feb7341a4b8 bpf: allow xadd only on aligned memory
+a8fe49b1ec6c6725dae8a364e1eb44dead26a653 net: Make IP alignment calulations clearer.
+e8560adec0320b6cede5fa934518ca0d571edf00 bpf: do not allow root to mangle valid pointers
+ad9c11e2082dd928568fe391baf45131a0af0b04 bpf/verifier: disallow pointer subtraction
+59b31fc9571415a5cb10eb909a1cdbd5e1fc4b5a bpf/verifier: fix bounds calculation on BPF_RSH
+033c8f2dc9a14110f151f59fd5d8489dd1fa415d bpf: remove never-hit branches in verifier adjust_scalar_min_max_vals
+a3614046572ae33688a50ccd5d4073945939574a bpf: fix max call depth check
+8be1b3fa9c8fca98577c738f1cedd2a481b0e1fe bpf: fix incorrect sign extension in check_alu_op()
+7fdcf90ecaefafd56d267c3f248a43a687a1608f bpf: improve JEQ/JNE path walking
+7a0d686b975cd552e834827bbbbac1fc355e9351 bpf: improve verifier branch analysis
+b9e5c0479f42735bf0073535c3287f19df9edfbb bpf: fix integer overflows
+2905cef5f0131ae5d5d158b67f2a0203ac063d51 bpf: mark dst unknown on inconsistent {s, u}bounds adjustments
+c6a75895a90e74fda0d73e9609504bde0fa7fb5b bpf: extend is_branch_taken to registers
+627bd35b8e420f4f86947fb7fa3caef624dfd803 bpf: teach verifier to recognize zero initialized stack
+ccec749b51404e15e5cfc49bfbc321e9bb4efe5e bpf: fix verifier GPF in kmalloc failure path
+f09fa48a9f8b1e8e168f41cb561d75fe7d0d5363 bpf: improve dead code sanitizing
+78dd15ea5db90e5f1f83c90e706601fdd34633ca bpf: don't mark FP reg as uninit
+f0ea554ef716d5bb5f038a4fa0a061b713dc2df5 bpf: guarantee r1 to be ctx in case of bpf_helper_changes_pkt_data
+77b6da659f6f16b6d714457a652e7c3e8ccf1e58 bpf: update the comment about the length of analysis
+00a74c10b5bc4c92c8fe36e2601b20c6c05e1f7e bpf: add per-insn complexity limit
+2868f47ca58c1134adb4e0096584f247c35f1f60 bpf: fix out-of-bounds access warning in bpf_check
+dbe90ec3ec79eab1ad6f28fe6e4a63964b1be1d9 bpf: fix maximum stack depth tracking logic
+f78e03acd118dca4f5b567bbc3cfb8adaacbcb71 BACKPORT: bpf: add support for bpf_call to interpreter
+48df138f842117fcb61806577ac11b03579731b3 bpf: fix check_map_access smin_value test when pointer contains offset
+76f4fa57c8e218e5a12b6a00f08aa3fd0bf21db9 bpf: restrict map value pointer arithmetic for unprivileged
+b719db0fa63a8a42635a8761676cf06326805eed bpf: add upper complexity limit to verifier log
+324aaf783aea78a34309c94e678ef5b6ef060333 bpf, verifier: detect misconfigured mem, size argument pair
+415574c97801be0a187d1b4c018709f2108cae70 bpf: allow map helpers access to map values directly
+1cc2360da3974dfe4c0a15012d1313a9ce350fe3 bpf: disallow arithmetic operations on context pointer
+a8b420b2d195f310ac6141c5eb50bcb48be2958f bpf: change back to orig prog on too many passes
+e909b940bde2778252dae0c6f5bd16357cfd5ec2 bpf: fix unlocking of jited image when module ronx not set
+13c303f63cc374accc84c6a85b7f5a6df5116b30 s390/bpf: remove redundant check for non-null image
+c0e53fae9f98bbef601d826ca267c37779eb2fb8 BACKPORT: bpf: Add jited_len to struct bpf_prog
+0bfc402442513df7313a44f40780ce37ef096aec bpf: fix missing error return in check_stack_boundary()
+87e6a7f6e7546ec879404cb926f98e14548ceb9c bpf: fix spelling mistake: "funcation"-> "function"
+ce5735462c201522f54d19882785e92e26b081c0 bpf: force strict alignment checks for stack pointers
+4bf5e9c838411ea6f581d9b6ee917a1a9a522944 bpf: don't prune branches when a scalar is replaced with a pointer
+75968c3cd606c7019bea0d9d0f6e2975d594ea45 bpf: make function skip_callee static and return NULL rather than 0
+562cc97042081384784d66a092e20cdbaf633ac1 bpf: fix stacksafe exploration when comparing states
+60a12a961aac40bc2b952ca72cf51c0f24bbe9cf bpf: make unknown opcode handling more robust
+99b6ca1521f4df1c7f698009b84649fe003011f2 bpf: enable access to ax register also from verifier rewrite
+6e9941b35b076c17211257a0b6b9ee67f0b356cf bpf: Cleanup RKP_DPP leftover
+51cbecb4b3e4f41587e5dc504f6e488992cba012 bpf: track stack depth of classic bpf programs
+3b7695dfc5d57dca5ce5bca21ab035d438cbab87 bpf: implement ld_abs/ld_ind in native bpf
+0faa6e721f4d082e8ba7b96475510a34521ed0b8 bpf: Append prog->aux->name in bpf_get_prog_name()
+9e99ab277d64c66c0bb40e4b4bb2516e528548f1 bpf: add various verifier test cases
+4728f8c58c5b56c8bc943e91ec00facf9516e27f bpf: move tmp variable into ax register in interpreter
+8e97e4d4a7621a5bff4334fc658f9feb5c6ff91e bpf: improve read-only handling
+2bf0d54d5a09b9ef27b3c34a1cceecf2b9fa31cf bpf, x86: add support for constant blinding
+a220b16a5ab0bfbe9fa42a2ea9a6b6a7c69a0491 arm: eBPF JIT compiler
+cb5bf1ed1a654dbb8c7b6f58cf4763d1b3add9e8 bpf, s390: add support for constant blinding
+41e6d827c34245090b8aa95d2c5139814f67a08e bpf, x86/arm64: remove useless checks on prog
+2765b4cde7a1432a9e984e458a97170deb262448 bpf: fix net.core.bpf_jit_enable race
+ce3fb0f107488ad392ab84b458642bf17b2bd88b bpf: x64: add JIT support for multi-function programs
+2c7e389a4ec6e17c879601342bcce81144220f64 bpf: allow for correlation of maps and helpers in dump
+5b680ce82599a403960b342a58b40cbf082882e1 bpf: fix incorrect tracking of register size truncation
+7ff9a47c455db1178343b9db08e6135c4e10ff79 bpf: fix 32-bit ALU op verification
+e671cafeaaf62337868dbade0b4610cbe854677d bpf: patch BPF call args if JIT always on is enabled
+0c4bc93c5e146b002e2f06ebbc5647cce7c67d39 bpf: unify main prog and subprog
+0d4a1131e9c6d276df94f6ecbf293ad676eedb23 bpf: centre subprog information fields
+bca3d90f6813ae15fdb2accad412ff38fa593534 bpf: don't leave partial mangled prog in jit_subprogs error path
+c557ed499dca437d6e62b63509f325cdd4b6c0c9 bpf: relax verifier restriction on BPF_MOV | BPF_ALU
+99c480c724a820f5d6f094a6300869f36625113e bpf: reject passing modified ctx to helper functions
+c4a8b5d4af297266520a21a98ca2290d7be192d0 stop using '%pK' for /proc/kallsyms pointer values
+c418b35d12877ab2ef515c148897d496df6b6739 /proc/module: use the same logic as /proc/kallsyms for address exposure
+b683a2d870e33f445097a4e2d28969514017c1d8 /proc/module: fix building without kallsyms
+664c446bb1ee16bea3e3988621e8f67c37c122aa bpf/verifier: fix verifier instability
+d4ea71375aa910b8e56881a7747e1d28851d70c6 bpf: offload: allow netdev to disappear while verifier is running
+28dabd486acab7faeb5cd6fb52e2e39a851437e0 bpf: annotate bpf_insn_print_t with __printf
+9b012c69781603d4a0988922972c65279050532f bpf: add faked "ending" subprog
+1ff123446a81b858003c67464a26db103cb22a21 UPSTREAM: bpf: export bpf_event_output()
+dd84b411c9566e8d59c836edac9fbf24c5f6c4ed UPSTREAM: bpf: replace map pointer loads before calling into offloads
+722a856a2e18cac7a5d8ea267454cfa5e1e96a5f bpf: Remove unused callee_saved array
+77ae051462a35d05c8728c1496e5a2b4a0e31617 bpf: fix context access in tracing progs on 32 bit archs
+9ccb9b06acde4b72b017fa529a9db9db2cea1569 bpf: Allow narrow loads with offset > 0
+bf939aa0517be82e15958a382f7a14670b65c9fc bpf/verifier: Discard unused code
+ed61c2b50d2839a9754e8a59bdaceed8a911b2cf Reapply "bpf: prevent out-of-bounds speculation"
+9a1a467a88f50c4dae2f5fee2d641868a270f974 bpf: fix spelling mistake: "obusing" -> "abusing"
+953c4aec7d6cf16f7ad4b4c00f4a25bcba7468d0 bpf: properly enforce index mask to prevent out-of-bounds speculation
+e233b3db3bc100c45db89b155ec2960072ca6aa5 bpf: Fix passing modified ctx to ld/abs/ind instruction
+4e97fa494ed28413762664c5dae2446509c679a5 bpf: offload: ignore namespace moves
+d68fa106396721515d5b00dc7429bf08239f3075 bpf: offload: don't require rtnl for dev list manipulation
+bcb16977a906d4d205deb85cfcf63db659cc1441 bpf: fix off-by-one error in adjust_subprog_starts
+6fa63c3184b66bb3f5ad8b3919a78096b606f5c0 bpf: fix kallsyms handling for subprogs
+6ac667f2b2bcb55ba58f9ac7eeb4818f6f697741 BACKPORT: bpf/tracing: allow user space to query prog array on the same tp
+b44bbcacf3bf026566b2ec1a3e2f20a26985aba5 bpf/tracing: fix kernel/events/core.c compilation error
+ae7b8dcace5515f71bab5745c0d5cb6770e40ffa lib/win_minmax: windowed min or max estimator
+229cff9950045cfc349ecee3dcac580940a4b9c4 Fixup "bpf: multi program support for cgroup+bpf"
+075c4796e725d1402210a04807c06cf60caf82ca UPSTREAM: bpf: remove tail_call and get_stackid helper declarations from bpf.h
+95ef581b7f03b18615801a6d538d885382334839 arm64: Add more test functions to insn.c
+9499f9d7e04c4a83dd6ec931fe61e0e5f2b7b8d9 arm64: add conditional instruction simulation support
+cf3a1e9e4d1cd0aa94a311a4001324425b4060f7 arm64: Add HAVE_REGS_AND_STACK_ACCESS_API feature
+9ff8bb83191ace9d2aa47e40cfbab0bdde0d1d23 arm64: Kprobes with single stepping support
+3241eb361fe7c00a563ba79233d11263d001dc10 Fixup: bpf: remove stubs for cBPF from arch code
+4765499d11f8b84b4e92528c521b2f16143927a3 bpf, x86_64/arm64: remove old ldimm64 artifacts from jits
+1b92d0d3756b219a927cbec19fc5e58af7d0cab4 arm64: fix endianness annotation for 'struct jit_ctx' and friends
+ffb4a629f2f280fd24d571727a381670049093b3 lib/test_bpf: Add tests for unsigned BPF_JGT
+f91358385b686e631a640e6e4a0ccf09c320841b bpf, arm64: implement jiting of BPF_XADD
+cdfec52d4a8a1ca190f752508c229465af288bc4 bpf, arm64: implement jiting of BPF_J{LT, LE, SLT, SLE}
+5bece54cf070311189af4a3a7cbf29c3e42b7e17 bpf, arm64: use separate register for state in stxr
+36ae57156df483b42ef1c931403425bfc67208c4 bpf: Allow cgroup sock filters to use get_current_uid_gid helper
+a0861b36233196055f0b96d17b5ae546ca0af61f UPSTREAM: bpf: offload: add a license header
+45bf8259e3dfc7c2f69f74af1fe0918dee859e5d bpf: offload: don't use prog->aux->offload as boolean
+2e46f00c04ce06f85735fdb66dbf49b4b0b8ec1b bpf: offload: free prog->aux->offload when device disappears
+c9ac06ea3ed0f62a9f24f3e7ced83cb8d971e867 bpf: offload: free program id when device disappears
+0731366293ad604cf96ac03ebed3fde876798ca3 bpf: offload: report device information for offloaded programs
+f9b3a8f269d66ba468f3a5713cd13a7a8497fccd UPSTREAM: bpf: only build sockmap with CONFIG_INET
+36781582dee5b4fb9a60724a5f6f02d86c6dcad9 UPSTREAM: bpf_obj_do_pin(): switch to vfs_mkobj(), quit abusing ->mknod()
+eb7fcb98b6c8dbdbf5b41eeaae558b1e21137ddc UPSTREAM: bpf: implement syscall command BPF_MAP_GET_NEXT_KEY for stacktrace map
+bcee948cab89ea75dd09dba6d090ffda993b9a1e BACKPORT: bpf: rename bpf_dev_offload -> bpf_prog_offload
+a9b2ceaea287d85fe4f19903bd2bb0ecc9cb18eb UPSTREAM: bpf: offload: factor out netdev checking at allocation time
+df7c023c736d158f81006a59fae1e189f8e100a7 BACKPORT: bpf: offload: add map offload infrastructure
+07eb2bb39c49a536a65d999a468e51265e3197ab UPSTREAM: bpf: offload: make bpf_offload_dev_match() reject host+host case
+55f6f5eaae3a452b6219548dd7f3b6d0e3e2bf3f UPSTREAM: bpf: add new jited info fields in bpf_dev_offload and bpf_prog_info
+832e5b5d289d4d0b8e5702dd7e851138e772f02f UPSTREAM: bpf: change fake_ip for bpf_trace_printk helper
+f9020081e1c4c7e78ed599984d35e3b7dc30ef8a UPSTREAM: bpf: add comments to BPF ld/ldx sizes
+0b4544425e8d76a3a4d629dd25a4fc3b573ce128 UPSTREAM: bpf: allow socket_filter programs to use bpf_prog_test_run
+5575ab3b07c4560a877ca46ed784119f1e853069 BACKPORT: bpf: arraymap: move checks out of alloc function
+b7eb231e5c8a1b7d468a6c2ff13d2da5aebbdc52 UPSTREAM: bpf: arraymap: use bpf_map_init_from_attr()
+3be3ee8993b67591a33e3c4108e7d68170b7cca3 BACKPORT: bpf: offload: allow array map offload
+61e41d410a6569e1b4ad4b87fae5d7b2744278cd BACKPORT: bpf: offload: report device information about offloaded maps
+d653a6adaaea271df57bc6adca22c8e564be2afc UPSTREAM: bpf: implement MAP_GET_NEXT_KEY command for LPM_TRIE map
+101c2064712139b16ca565171503fa9ed9f67840 UPSTREAM: bpf: fix incorrect kmalloc usage in lpm_trie MAP_GET_NEXT_KEY rcu region
+f1867382bc9f1a8cc57be0013645bee8c398cd3c UPSTREAM: bpf: Use the IS_FD_ARRAY() macro in map_update_elem()
+5ffedf215620e3f69a731306068af32b1186e317 UPSTREAM: bpf: fix kernel page fault in lpm map trie_get_next_key
+4f60ffc5d669790f811ba1cd1e0067fe7c97a950 bpf: comment why dots in filenames under BPF virtual FS are not allowed
+1bf2766a982be7e582821975ccd032e1f23a7ff6 UPSTREAM: bpf: extend stackmap to save binary_build_id+offset instead of address
+4a7b25635e84663b7847a0c5bdcc6b21534ab2fe UPSTREAM: trace/bpf: remove helper bpf_perf_prog_read_value from tracepoint type programs
+7286be2b71c45150af8703a039b311747716c717 bpf: follow idr code convention
+d4cdb3d8a6181d0853ee131d51d53c036252122c BACKPORT: bpf: introduce BPF_RAW_TRACEPOINT
+fa94da62759dc101e8abe36025bda7e12f99a50e bpf: sockmap redirect ingress support
+f2416e656d06cc7464eb73b0b4ed45e715abfd4d bpf: sockmap, BPF_F_INGRESS flag for BPF_SK_SKB_STREAM_VERDICT:
+ea951b9315ef2a22405e2438ac6c0a3f07876b3f lib/scatterlist: add sg_init_marker() helper
+29e7e7a552d0e416c6e9d9ecbdbc4c422e2956ff UPSTREAM: bpf: sockmap: initialize sg table entries properly
+ddd8dc9265e3860fb1a35cb87edd2f40ba03238d BACKPORT: bpf: Check attach type at prog load time
+ec7cb7fe355cb4f89e0c3c2a713c96ca69d384e3 BACKPORT: bpf: Hooks for sys_bind
+99831823553bc94501a6981ea0471927f68529e4 BACKPORT: net: Introduce __inet_bind() and __inet6_bind
+d52b1866e565820b7fc48cd75448a7e8d74a43c1 UPSTREAM: bpf: Hooks for sys_connect
+3a6b743d13eac72ecfab3c4870254a8e63469b64 BACKPORT: bpf: Post-hooks for sys_bind
+854d9a92fd8d646ed8e789527ad6d750d2397e19 UPSTREAM: bpf: sockmap, free memory on sock close with cork data
+b60e8e6db5a9402abab43c256408098a51bc66ca UPSTREAM: bpf: sockmap, duplicates release calls may NULL sk_prot
+00c52e81d62d17af8494a65c4ec17fb8f966ce05 UPSTREAM: kernel/bpf/syscall: fix warning defined but not used
+b2cfdbebca2493f9c1a588043d49f4fde22a3e5a bpf: adding bpf_xdp_adjust_tail helper
+dabc8751f2ad6d6c4e756e6bb5b31919b1f3d65e bpf: add helper for getting xfrm states
+73bafe6de4e33ea8d6ee9eabe4b934c88a4c44de bpf: update perf event helper functions documentation
+b3be9e36bb95c936937652213a43188b007e2f9d net: comment fixes against BPF devmap helper calls
+f887f35c79bd2389a3955c05f749ad2e207e4a8a bpf: add script and prepare bpf.h for new helpers documentation
+adf678627bfda45a08735bcf48ee7c1c8aa3de7c bpf: add documentation for eBPF helpers (01-11)
+7e1ea7eb43bd13769b412f3b419186c592409108 bpf: add documentation for eBPF helpers (12-22)
+3314971470caebf7b1e6ac64a3851c1059ebca2f bpf: add documentation for eBPF helpers (23-32)
+1ea66a2b4761ac29850b62a81688268113d2928a bpf: add documentation for eBPF helpers (33-41)
+a441b0ea6140b8b06fc84fadcb962221043d7c0d bpf: add documentation for eBPF helpers (42-50)
+6ffe0f1ff44786ee818ea6dd8446100244f24697 bpf: add documentation for eBPF helpers (51-57)
+82b3cb854e155a4c88d184124812b33a29f38f2d bpf: add documentation for eBPF helpers (58-64)
+661f6b4d7b84475fa303b63561752365ebb58426 bpf: add documentation for eBPF helpers (65-66)
+1e2ccd8ec0f2001e847178066ac13018ce733370 BACKPORT: bpf, doc: Update bpf_jit_enable limitation for CONFIG_BPF_JIT_ALWAYS_ON
+25e42fd85506322dde66215e168425d2df5b2b7b UPSTREAM: bpf: change prototype for stack_map_get_build_id_offset
+678925ec59f0a001920308291f8e38d2dfae21a4 BACKPORT: bpf: add bpf_get_stack helper
+39bbdb037c704566e346a060eed8396127c1f9ae UPSTREAM: bpf/verifier: refine retval R0 state for bpf_get_stack helper
+e0f7413add30199d8f0bcb3c6e2a11740b08fcd1 UPSTREAM: bpf: fix buggy r0 retval refinement for tracing helpers
+c5e4bbd8b2af911a4aec7a40633b8b74975175a6 UPSTREAM: bpf: add skb_load_bytes_relative helper
+404d838d0e3e67f1e61822793440d818b6ae691c bpf/cgroup: fix a verification error for a CGROUP_DEVICE type prog
+558687e6acebe3307b0a770ba68c483be61bfe31 bpf: Annotate implicit fall through in cgroup_dev_func_proto
+67488dac4aadce844be4c41c984f6a6d2b8b50e6 Revert "bpf: introduce update_effective_progs()"
+869d2163b50108e127d5f3ff68f3d4c68269aa6b bpf: Move sock_ops_func_proto upward
+5406d7728f16715534224c2e88834b6439b7ab91 bpf: remove redundant variable old_flags
+59e4a3da384329d8ab2f9e3aaac7b67bcb625056 bpf: export function to write into verifier log buffer
+59e10e0006ced4a6eb12f00cf00ef4f376a9de67 bpf: Remove struct bpf_verifier_env argument from print_bpf_insn
+3dabae6486fa47fd54057f57d17f6bf142f15330 bpf: move {prev_,}insn_idx into verifier env
+ea5d09621b3e5bb8bc94ff06a709e1a081bf9975 UPSTREAM: bpf: Rename bpf_verifer_log
+502e2d25dc19fab20632b11a551afa4af65890fc UPSTREAM: bpf: Add bpf_verifier_vlog() and bpf_verifier_log_needed()
+3b8868754464ea4fc2e7201dae047ec901807c41 UPSTREAM: bpf: btf: Introduce BPF Type Format (BTF)
+91c448505dce699808319d58bb7867f0e459a897 UPSTREAM: bpf: btf: Validate type reference
+eeaad3feea748c4845926ac7d883ca9e9a9bb28b UPSTREAM: bpf: btf: Check members of struct/union
+a5b01c4055c145c9d976e4e0a4fed1c90361aebb UPSTREAM: bpf: btf: Add pretty print capability for data with BTF type info
+8ad3debe99cc44260e9622435c2b0daa7fba1f5d UPSTREAM: bpf: btf: Add BPF_BTF_LOAD command
+9974590eb177908ec3a3c28d7eda0ab055981269 UPSTREAM: bpf: btf: Add BPF_OBJ_GET_INFO_BY_FD support to BTF fd
+e02ce62b15227ecf18c2a38dfdceef5926ca052f UPSTREAM: bpf: btf: Add pretty print support to the basic arraymap
+dc6e7aebbc245d2afce73a97686c86c5bb6fc44e UPSTREAM: bpf: sockmap remove dead check
+36847ec9fa449883a84b521f48bc2c548b3e1988 BACKPORT: bpf: btf: Clean up btf.h in uapi
+9b9e45f7d65cd9c245ae0b183d22d578226b187d bpf: btf: Add missing includes
+40b7853ce3c9a05b891317c79d43932a3b06be60 UPSTREAM: bpf: sockmap, map_release does not hold refcnt for pinned maps
+bd323ae9260ae22421ad30ebaed3ac7a20d68b56 BACKPORT: bpf: sockmap, sk_wait_event needed to handle blocking cases
+764bd987eb464db26d5807ef456056173f930275 UPSTREAM: bpf: sockmap, fix double page_put on ENOMEM error in redirect path
+9b7234dffb392b3b7059e6841447d2f9c4574feb bpf: Add gpl_compatible flag to struct bpf_prog_info
+0e988b749a39d2da03f6374d48988a1cbb3cbe40 UPSTREAM: bpf: Allow bpf_current_task_under_cgroup in interrupt
+e85ae30f96205d4b5bafed19ef97b9f72a9f367c tracing: bpf: Hide bpf trace events when they are not used
+4a2d4a45c1df2a400bff19c9fed42a9b7db6a97d BACKPORT: bpf: remove tracepoints from bpf core
+df42605a59c8fc2d0ac20b95592530ff559c4dae UPSTREAM: bpf: fix formatting for bpf_perf_event_read() helper doc
+950099d1ef621e8dbf843cd79cfa7cb816572917 UPSTREAM: bpf: fix formatting for bpf_get_stack() helper doc
+a5511ee111e366d9272ab14afa3cbafba098b59e UPSTREAM: bpf: relax constraints on formatting for eBPF helper documentation
+bcc819b41a851b549d61810d5e1bbfedf22d4f20 UPSTREAM: bpf: sockmap, fix scatterlist update on error path in send with apply
+c752fb9202617cc00cbb4d663b10cc804837cf94 UPSTREAM: bpf: sockmap, zero sg_size on error when buffer is released
+1ac5ac51048994e887ff312641a240afe21d6ec7 UPSTREAM: bpf: sockmap, fix error handling in redirect failures
+2f52fcf55221c29074bbdd2f1408a5a23983223b UPSTREAM: bpf: btf: Avoid WARN_ON when CONFIG_REFCOUNT_FULL=y
+312175449fe74ceef22b96951327045853fdcfd0 UPSTREAM: bpf: btf: Introduce BTF ID
+e7214d02379e88884ccbb3cd8364aa0b99f201e5 UPSTREAM: bpf: btf: Add struct bpf_btf_info
+921d62c012dc1a8e412d1219ba074c84cb1025db UPSTREAM: bpf: xdp: allow offloads to store into rx_queue_index
+869b60f846b6c5747b96cdb7bc2e5db203572443 bpf: Change bpf_obj_name_cpy() to better ensure map's name is init by 0
+29eac2b65b136753ade2bd80b4437d8fdd0e3b90 bpf: Fix compiler warning on info.map_ids for 32bit platform
+befd020666af735532c1fb9fb7bd69a5cf434f67 UPSTREAM: bpf: Expose check_uarg_tail_zero()
+d5b0b874ab2eae116a796d557d7d3b2aebca6feb UPSTREAM: bpf: btf: Change how section is supported in btf_header
+51422ecb9c1b9cdddfef7410b396452e95acbc33 UPSTREAM: bpf: btf: Check array->index_type
+a869b713558f95ef956a6423bf7c62d1a9619082 UPSTREAM: bpf: btf: Remove unused bits from uapi/linux/btf.h
+66fd5debbe91b6e06f8b95c369b4bd412e1d1759 UPSTREAM: bpf: sockmap, refactor sockmap routines to work with hashmap
+e32f02827d5d76a2efcb938ed1d0e553220b2061 BACKPORT: bpf: sockmap, add hash map support
+b3de6ae96d5474e6008aa08030259c05e23ddfb9 UPSTREAM: bpf: fix sock hashmap kmalloc warning
+d561f8753ccdd6b897fee090ccab90c8a85219eb UPSTREAM: bpf: sockmap, on update propagate errors back to userspace
+13a2decf7fc1f2308f7714f1ffbc47e767ef68db UPSTREAM: bpf: sockmap, fix uninitialized variable
+05ec22f0d5d7a630369e65190eda35ba8c2a1069 UPSTREAM: bpf: sockmap, fix double-free
+464e2cd3636d26daaa8d090c35e8b5866a2a355b UPSTREAM: bpf: sockmap update rollback on error can incorrectly dec prog refcnt
+d07e30af4562cc146612043619a1eb367ddc5d53 UPSTREAM: bpf: parse and verdict prog attach may race with bpf map update
+13d0423bf3199066d2a947a8da7e670368649b73 UPSTREAM: bpf: fix truncated jump targets on heavy expansions
+411cbead1743c3cfdcd6340d454d97603b13985d UPSTREAM: bpf: allow sk_msg programs to read sock fields
+6ad7e7c32f7b9a6bc2d63bb6d43141f1b1fd80e0 UPSTREAM: bpf: btf: Avoid variable length array
+a115b9f00108e2aa26a9b53fab38a21ceebfebd6 UPSTREAM: bpf: support 64-bit offsets for bpf function calls
+72681e4851d4f59aa33c3bd38d54dc5210ffcc2d UPSTREAM: bpf: btf: avoid -Wreturn-type warning
+31f40f4b83295e2f4db5233c48a13bbfc56d4b52 UPSTREAM: bpf: Define cgroup_bpf_enabled for CONFIG_CGROUP_BPF=n
+b8c21d89d87b4d5acb4b8cb1f9df689b92c7b48e UPSTREAM: bpf: Hooks for sys_sendmsg
+66447113f56aba3334a1b07140da76841199b936 bpf: inline map in map lookup functions for array and htab
+f4b7143431705c76b2783edb02605e5a00d58fa0 bpf: disable and restore preemption in __BPF_PROG_RUN_ARRAY
+c21b82de4391a2dc1ffebae091af6b3176f35779 bpf: include errno.h from bpf-cgroup.h
+8a85b3de1e7dbc2184db33e504e00791f2a80814 UPSTREAM: bpf: bpf_prog_array_copy() should return -ENOENT if exclude_prog not found
+b69b746bd0817e3b4bd9033bb02b78b7491ec346 BACKPORT: media: rc-core: do not depend on MEDIA_SUPPORT
+c10d7aa8eb6099a601eb7c5ddec29e270b596b78 BACKPORT: media: rc: introduce BPF_PROG_LIRC_MODE2
+f0bf0c09fa04dabbb2103044f0273416787aeeeb BACKPORT: bpf: btf: Check array t->size
+79f5af02c7b1b2856e6e7ecd7b3cc28bd8cd2e67 BACKPORT: bpf: btf: Ensure t->type == 0 for BTF_KIND_FWD
+6100be29c48c336c23d4204f894f13cc0981fe79 bpf: avoid rcu_dereference inside bpf_event_mutex lock region
+30e9798432e72a3ec4a9b07e2fa6d3643e334e8b bpf: set maximum number of attached progs to 64 for a single perf tp
+bf05eb704052bf6e13f4bde49132852d6b102f3c bpf: fix bpf_prog_array_copy_to_user() issues
+307ac5205023118bbd7160778182abcc9ad4428b bpf: fix bpf_prog_array_copy_to_user warning from perf event prog query
+c699f22b8d9bd8ad4d094f8a9c709acabe0bbff5 UPSTREAM: bpf: do not test for PCPU_MIN_UNIT_SIZE before percpu allocations
+c99de9a8011967cc95a56d3e55adc4e016e595f2 UPSTREAM: bpf: fix mlock precharge on arraymaps
+82d9acefc69cbcab3eb064cb4e92bd550e322fa6 bpf/tracing: fix a deadlock in perf_event_detach_bpf_prog
+e1d40bb60ee340ef036402d77cd80b259dd61e66 bpf: hash map: decrement counter on error
+c6e8ee3da6b45856d4fd670707428e72483bc55e bpf: sockmap: write_space events need to be passed to TCP handler
+5b1f081991ca4212e1cc28a324216d05dccfe3e5 bpf: 32-bit RSH verification must truncate input before the ALU op
+5930b0d3ad4e83c974af15c744c5231c77a896be bpf: Implement map_delete_elem for BPF_MAP_TYPE_LPM_TRIE
+fcd360edd086c345a7d6a3957c9f371866a30417 bpf: Optimize lpm trie delete
+b56de58dac64e31f29bb82f72764fb1dc3765bc1 bpf: fix rcu lockdep warning for lpm_trie map_free callback
+3fcd8f5855bc5a9be576412cdf515c47e6cf2445 bpf: btf: Fix bitfield extraction for big endian
+5e484a2b2710ca41d6a5a0c42acf821c765e6474 bpf: btf: Clean up BTF_INT_BITS() in uapi btf.h
+086ae765f31a098212c77ae89caa810b0589f2a9 bpf: btf: Ensure the member->offset is in the right order
+739d04eeef54cd1c283abf45c0df2ae82c923eb3 bpf: btf: Fix end boundary calculation for type section
+45b22e25643cd769186c37de21db00a4f4c38aaa bpf: btf: Fix a missing check bug
+cc70f019316751fba1984e72de9eefae7d59f2ac bpf, btf: fix a missing check bug in btf_parse
+69e7a838093d2f83d4125c2f696ae4c450f99f84 bpf/btf: Fix BTF verification of enum members in struct/union
+235741ead0996404bf51687ddd5c94567a2de76b bpf: btf: fix truncated last_member_type_id in btf_struct_resolve
+58b2025d3a16a141e4c69cbac482bafdd38bbea9 UPSTREAM: bpf: btf: Rename btf_key_id and btf_value_id in bpf_map_info
+2903c2155bc70a898e8e7417b1594675aeca25a7 UPSTREAM: bpf: show prog and map id in fdinfo
+c40f8c44aad5384e499cb2eade9e7fd37217c1b8 UPSTREAM: bpf: fixup error message from gpl helpers on license mismatch
+c1282c91a1858ef935e732dfdb7210efa5bf6f96 UPSTREAM: bpf: avoid retpoline for lookup/update/delete calls on maps
+c495ab152af02726684bf73c82bb57b8a9a186d9 bpf: add bpf_skb_cgroup_id helper
+2ce5ff5226713de1038e3f2a94da422853e851d3 bpf: implement bpf_get_current_cgroup_id() helper
+6b6a6ca4a01c9a3154aa7ca2ecf632378a501a81 UPSTREAM: bpf: implement dummy fops for bpf objects
+bf94eeb026292834c1c4984dc3dd39d6411a5a0d UPSTREAM: bpf: error handling when map_lookup_elem isn't supported
+a31d593b59f78dcc89d1686b89f21150497b3093 UPSTREAM: bpf: wait for running BPF programs when updating map-in-map
+2c072105c94e720c0da07e49c62f5e103db5c7fa UPSTREAM: bpf: remove duplicated include from syscall.c
+2dc6b8fc6090fd5b24c2156e391c86b1d04ee894 bpf: get kernel symbol addresses via syscall
+6a34d529059b115258c45b86181ea1cdfb1647e2 bpf: get JITed image lengths of functions via syscall
+d4bff392edd75aee176d213a9fc893390b8d1a97 bpf: fix multi-function JITed dump obtained via syscall
+362fc7cacde32e88e433c4a5979dc3ff0218faa1 bpf: export whether tail call has jited owner
+61f8476dd4b5160f43175624e100ab56fc29b08e bpf: fix panic in prog load calls cleanup
+5fa175a1ed84903ed8efecdb1d6b9b74ee8ae012 BACKPORT: bpf: reject any prog that failed read-only lock
+093a1bccd2ed0fc6a38b24e979abe2ff3685598e UPSTREAM: bpf: enforce correct alignment for instructions
+7efc8c087a3bbc7545d0c6bceb42b0c8b8f7f906 BACKPORT: bpf: fix attach type BPF_LIRC_MODE2 dependency wrt CONFIG_CGROUP_BPF
+d3bd38f02ea9c3d83774a6f0db1f5bb3dedcd418 BACKPORT: bpf: undo prog rejection on read-only lock failure
+b54b2a916a51d34edac07f34ec3c96cfad03f656 UPSTREAM: bpf: sockmap, fix crash when ipv6 sock is added
+888be60c69f520081e58da74a66bb61741456a17 UPSTREAM: bpf: sockmap, fix smap_list_map_remove when psock is in many maps
+5c2c0b2543803f51e61f574d1bdb34cdd8b347f6 UPSTREAM: bpf: sockhash fix omitted bucket lock in sock_close
+2b186e22aa0cf658df0a2e8b584547e8dfe8be0d UPSTREAM: bpf: sockhash, add release routine
+faa6786796b77341bc843cd625749ae1a52bc1d6 UPSTREAM: bpf: sockmap, error path can not release psock in multi-map case
+945166554ee6d707a7486861979b31da5a44bc31 UPSTREAM: bpf: sockmap, hash table is RCU so readers do not need locks
+ef31d1b8de480d9b6f32386062b393688c05eb9d UPTREAM: bpf: fix sk_skb programs without skb->dev assigned
+fc94dc35a0a5f95751e26227e4f1391ad5ed8640 UPSTREAM: bpf: sockhash, disallow bpf_tcp_close and update in parallel
+0cabcb09e1fa50100c2b9a602c164febf8b66ee0 UPSTREAM: bpf: sockmap, consume_skb in close path
+ba831adf13c212b8c1d4c505286ea6c8dde642f6 BACKPORT: bpf: sockmap, convert bpf_compute_data_pointers to bpf_*_sk_skb
+141e1c4903e88896886d1966a6bd938ca8ccd1f1 UPSTREAM: bpf: sockmap: remove redundant pointer sg
+0047e3bcf6fb8efeef5ad43d55180fbf347c39f9 UPSTREAM: bpf: offload: allow offloaded programs to use perf event arrays
+732f0861447758b0a2bb917ab591ef777e8fde0d UPSTREAM: bpf: offload: rename bpf_offload_dev_match() to bpf_offload_prog_map_match()
+513948c3c8a5efcc1af468ba1f52bc244cf8917e BACKPORT: bpf: offload: aggregate offloads per-device
+88ecbb26a4a06a8f2ef19881cfe0633940332c05 BACKPORT: bpf: offload: keep the offload state per-ASIC
+fe91e9646c77f0bfbb947d19527b1af170fd246f UPSTREAM: bpf: offload: allow program and map sharing per-ASIC
+3288959844eff9765f91f7cd703c7cb28b6b6eb4 UPSTREAM: lwt_bpf: remove unnecessary rcu_read_lock in run_lwt_bpf
+8bd582cdd0366d788dad9eb9e044ba4f710f99ba UPSTREAM: bpf: Support bpf_get_socket_cookie in more prog types
+821386ad4f2939188bd8f18f05a6088db9e10a12 BACKPORT: bpf: verifier: MOV64 don't mark dst reg unbounded
+b8adfe5c908aac5878ca74de7cfffbc84a14a736 bpf: Reorder a bit
+bb432b89f545033893b9d5569508005ca2dcf16e BACKPORT: bpf: add ability to charge bpf maps memory dynamically
+3fa4738f1084b873346d235265aa050e6fdf4dc1 BACKPORT: bpf: introduce cgroup storage maps
+0f35c7606ddb06aaa0e0aaec555c12fcc6e02f09 UPSTREAM: bpf: pass a pointer to a cgroup storage using pcpu variable
+57b89931a4570a82496b5084c8102afdf59fc5ec UPSTREAM: bpf: allocate cgroup storage entries on attaching bpf programs
+b13f21fb5e4c75172ff7a9fb74d20bb1b31fbed5 BACKPORT: bpf: extend bpf_prog_array to store pointers to the cgroup storage
+3f72d1f80c21ba79b37beb10613c303ba1f9791f UPSTREAM: bpf/verifier: introduce BPF_PTR_TO_MAP_VALUE
+3e035edc8f865ea0469adc8a9e1dcd495cf90467 UPSTREAM: bpf: don't allow create maps of cgroup local storages
+fded11eb1ff3d24957120304e2e48eb180e3b30e UPSTREAM: bpf: introduce the bpf_get_local_storage() helper function
+53ca623a2fb25c1e8944d928685adc0a5f94a120 UPSTREAM: bpf: btf: add pretty print for hash/lru_hash maps
+36a727b8a3979825920abee5bce828cf7b9436aa Revert "tcp: Protect accesses to .ts_recent_stamp with {READ,WRITE}_ONCE()"
+36bce35a0009b5f936b0bf11b66bd300841b67ba Revert "tcp: tighten acceptance of ACKs not matching a child socket"
+c2750d9bc63e6a9ed6afba31ff43d6292d4e73d5 UPSTREAM: soreuseport: fix mem leak in reuseport_add_sock()
+51c282db85ec71596d7a86be523d304e9a2467f8 UPSTREAM: soreuseport: BPF selection functional test
+9a6f3d472f3b0c5a54b0c76c69e5d56a85cbdd04 UPSTREAM: soreuseport: pass skb to secondary UDP socket lookup
+7e0018c98e8e563de73895ddbf869bcb7b5edfed UPSTREAM: soreuseport: BPF selection functional test for TCP
+37acdccd72a49abab3bd473925699cca522c25d5 UPSTREAM: udp: fix potential infinite loop in SO_REUSEPORT logic
+bc6dfdea583a845b2ac34bb1281252a9a41ce7df UPSTREAM: soreuseport: Fix reuseport_bpf testcase on 32bit architectures
+6c60f3524c83835cf6db599f4d75fc8192d29dc4 UPSTREAM: bpf: fix rlimit in reuseport net selftest
+4b9e3dd81797b80f2052508c23aee78a381e57b5 UPSTREAM: bpf: do not blindly change rlimit in reuseport net selftest
+93f3f4f4b6ec2c6981ebaef088e24bc438d401b8 UPSTREAM: soreuseport: fix NULL ptr dereference SO_REUSEPORT after bind
+dd73636365bff061405b31ec17f955d84c4322e6 UPSTREAM: soreuseport: fix ordering for mixed v4/v6 sockets
+84b4b6da769c792777c0fe6077bc560eff82af21 UPSTREAM: soreuseport: change consume_skb to kfree_skb in error case
+eb4e6abbe2eac22277f9da86f95b0360b42532ed UPSTREAM: soreuseport: add compat case for setsockopt SO_ATTACH_REUSEPORT_CBPF
+07a73bf9774be10d3d963d62efd1bb933cfe0312 UPSTREAM: bpf: udp: ipv6: Avoid running reuseport's bpf_prog from __udp6_lib_err
+0593cfe519cfbf5fee59cfadd1cb3d9aff8d6da3 UPSTREAM: ip_tunnel, bpf: ip_tunnel_info_opts_{get, set} depends on CONFIG_INET
+cb20a684e5cfcf5c51261f5eda375a247a79fb18 UPSTREAM: sock: struct proto hash function may error
+62d04ecd06a36830a2e983b27562e9ff08474dad UPSTREAM: inet: create IPv6-equivalent inet_hash function
+3bb7ef8ca15375dde55d01a26c02a4943a31a6a8 UPSTREAM: soreuseport: fast reuseport TCP socket selection
+294829751bdb9531ee5256829b1964ddb1cd9acc UPSTREAM: inet: Fix missing return value in inet6_hash
+55bad334954482aa5999b40160bd1dfcdbc1e4ce UPSTREAM: soreuseport: Fix TCP listener hash collision
+3ab58562bb462360cedd8ea1f8939ee3aac6c9dc UPSTREAM: soreuseport: fix initialization race
+8d274cc263b2c45a1c12bb0aaea12f5ebb639ef7 BACKPORT: inet: refactor inet[6]_lookup functions to take skb
+793cdfb26e7e536a983bd65f1e50e73730edf06c UPSTREAM: udp: include addrconf.h
+b435ea1f7fb17b63ae9a2c644d04ce14bcff7d6f BACKPORT: inet: collapse ipv4/v6 rcv_saddr_equal functions into one
+ca63479ff85bca72bf1771641064aa28bff39eab UPSTREAM: tcp: Avoid TCP syncookie rejected by SO_REUSEPORT socket
+5238e25a6a85104a9ea124377be219d40e8c049a UPSTREAM: net: Add ID (if needed) to sock_reuseport and expose reuseport_lock
+25c8572cefe40351217feaf583f06536ad054de3 BACKPORT: bpf: Introduce BPF_MAP_TYPE_REUSEPORT_SOCKARRAY
+3c1d1f38cb193a866c2d28b373a3c84ae84d8e9f BACKPORT: bpf: Introduce BPF_PROG_TYPE_SK_REUSEPORT
+68089d001dca0c0de7eccaddbd4ffd5da59d3182 UPSTREAM: bpf: fix bpffs non-array map seq_show issue
+916a36ca9890e43edfa6db410c4b73bbdfcaf3f2 UPSTREAM: bpf: use per htab salt for bucket hash
+378a6d028c4f579535ea73050c3438c813659d7d BACKPORT: bpf: decouple btf from seq bpf fs dump and enable more maps
+8d1e011b112501d86040ad0141f5123595a0c80d UPSTREAM: bpf: add bpffs pretty print for percpu arraymap/hash/lru_hash
+31c96eecae682a8f9c4cccb491581701dcb6d39e net: sock: Change tx_queue_mapping in sock_common to unsigned short
+b0984de53315f7169efe4cff6ee66be4214e889f tcp: use windowed min filter library for TCP min_rtt estimation
+d74c38aa688af383a9d99fef819046e5b16a3fc9 tcp: Add RFC4898 tcpEStatsPerfDataSegsOut/In
+24148399ccda3b7cdd2e5bb3ff2525dcd6b15b4d tcp: export data delivery rate
+41c68d8e9bd1e8b0698a6e7bd68d60307d00d7e4 !fixup: security: bpf: Add LSM hooks for bpf object related syscall
+0e141a8e31a113225e6856080623d1c04799cb84 BACKPORT: bpf: Introduce bpf_skb_ancestor_cgroup_id helper
+5611fb82f83b37016ed98a050cd4de599adc67aa BACKPORT: bpf: remove mark access for SK_SKB program types
+9ea35e52a9d097a6b4c0fd1977ca0316cce64db1 BACKPORT: flow_dissector: implements flow dissector BPF hook
+a4eacdecbe337368f52dde5220c34d83d361ebf4 bpf: add cg_skb_is_valid_access for BPF_PROG_TYPE_CGROUP_SKB
+a9e7744a537c9e69b78e120ef179ed3fe409873e BACKPORT: bpf: add tests for direct packet access from CGROUP_SKB
+231e798e41c7a8ecdccab6325c898492fbab05c9 BACKPORT: bpf: refactor bpf_test_run() to separate own failures and test program result
+3ff163ae8779a60cdaa58752fb3673f9185352d6 BACKPORT: bpf: disallow direct packet access for unpriv in cg_skb
+cf7d294fd3bc0fa9b2f6a222d913528d790c11c8 UPSTREAM: bpf: fix direct packet access for flow dissector progs
+a0665419d821ae837fd96f5dcd422831c8d408f0 UPSTREAM: bpf: fix cg_skb types to hint access type in may_access_direct_pkt_data
+13492d0e25cbaaf6175253793a63a423cd5fe0a3 UPSTREAM: bpf: permit CGROUP_DEVICE programs accessing helper bpf_get_current_cgroup_id()
+761da52ca123ce2d47394d5348abb94bdbeeb40a BACKPORT: bpf: extend cgroup bpf core to allow multiple cgroup storage types
+561174a73b9d5a5e34f6a625ab1337727b1fb261 UPSTREAM: bpf: rework cgroup storage pointer passing
+58295d42a48e4f889e3a8c0e7e276f4c90d645cb BACKPORT: bpf: introduce per-cpu cgroup local storage
+88853311146e3fac613672fefeae2b76e52c62f0 UPSTREAM: bpf: don't allow create maps of per-cpu cgroup local storages
+c9654d0db0534580f98d65c7b3e2e4b2a55d0131 UPSTREAM: bpf: harden flags check in cgroup_storage_update_elem()
+8633cab7c18c64521eee614e3e431e0f6ff8c718 UPSTREAM: bpf: don't accept cgroup local storage with zero value size
+95faa77f5411ce44a3e5de92f602fef05cc76eb2 BACKPORT: bpf/verifier: per-register parent pointers
+70d66e985ef8ffeda7cbd278975a15c208a31da9 UPSTREAM: bpf/verifier: display non-spill stack slot types in print_verifier_state
+ff7cb1ffe6d14a8a9e4d18c62d36e333462985be bpf: Add iterator for spilled registers
+1841fa01fe1860d39d0a04577a4d2707f5cbf17e BACKPORT: bpf: Simplify ptr_min_max_vals adjustment
+2a44126e92fb69f5e68f9049f5f46a7a24da549c BACKPORT: bpf: Reuse canonical string formatter for ctx errs
+dfe0329ed92a721a806316910edac7f1f087e79c bpf: Generalize ptr_or_null regs check
+5a4365f7bd253aef57c62b6e2d6ea1b05ba3e243 BACKPORT: bpf: Add PTR_TO_SOCKET verifier type
+59358c2b50fbb289b3c94866574766eec9eccbac UPSTREAM: bpf: Macrofy stack state copy
+5a4a6a029fe7a267c7b413596c51d81644f72215 BACKPORT: bpf: Add reference tracking to verifier
+b034ba130e49fa3dd8b1c1ce512949ac25fe9fa9 BACKPORT: bpf: add verifier callback to get stack usage info for offloaded progs
+77b72f75a633a1b8ec7c9822c9e303292f8181b5 UPSTREAM: bpf: restrict stack pointer arithmetic for unprivileged
+94a32518c51f4a1a9adc8fa51a1be61425d02575 UPSTREAM: bpf: restrict unknown scalars of mixed signed bounds for unprivileged
+67171935cfe813a8d3c99055d108498c1a5c1cca UPSTREAM: bpf: prevent out of bounds speculation on pointer arithmetic
+3b71fa2029e5eef898cdf9f7d238788b29e9f300 bpf: fix sanitation of alu op with pointer / scalar type from different paths
+9618fa65bfc5f4043d9b1ccbbe8fbc145c6de78e bpf: arm64: add JIT support for multi-function programs
+b40e6124f14458b9d54da2965e98f2567e8c98d4 bpf, arm64: Clear prog->jited_len along prog->jited
+5730eebd82456b4f8c7db851f6c443087157ea42 bpf: show real jited prog address in /proc/kallsyms
+626a1831b97f8aab5352a0038573ee3146048742 bpf: show real jited address in bpf_prog_info->jited_ksyms
+2448e2154c5fb7a1b0f2e9d1650c43b0046f0812 bpf: show main program address and length in bpf_prog_info
+6b0fae302330da40e4b0bf33201092fa86bab0cc bpf: fix bpf_prog_get_info_by_fd to return 0 func_lens for unpriv
+40f7ed030ec6a926c8dc0be2b4c6fd0f75b47246 BACKPORT: bpf: pass a struct with offload callbacks to bpf_offload_dev_create()
+f6e3c29003a6c0a1e79ba862c3dff41fbd876d2b UPSTREAM: bpf: call verify_insn from its callback in struct bpf_offload_dev
+529762c76aa63175a733291ef4bcabff3145901e UPSTREAM: bpf: call finalize() from its callback in struct bpf_offload_dev
+2c0a913b5e2205b20a5ea3959299865ebb164db4 BACKPORT: bpf: call verifier_prep from its callback in struct bpf_offload_dev
+be86aa98fd42ddf3d765436c35ccfaacce161069 BACKPORT: bpf: pass translate() as a callback and remove its ndo_bpf subcommand
+3689741d7070e7f7e6c7b4fed082a052012021fc BACKPORT: bpf: pass destroy() as a callback and remove its ndo_bpf subcommand
+d52caeefb93d93da724477575adc270b90ee9544 bpf: clean up bpf_prog_get_info_by_fd()
+c9513f332516dd16a757cf827252928057db5111 bpf, x64: fix memleak when not converging on calls
+477fe814a35af6af1a5c718099117c69852a4fe0 BACKPORT: bpf: fix off-by-one error in adjust_subprog_starts
+cf9882d4a7fc0bfe8455c7e26fa59b4ce0d13cb1 UPSTREAM: bpf: allocate local storage buffers using GFP_ATOMIC
+6384605420196b772672a8322d02b86ee2642142 UPSTREAM: bpf: btf: implement btf_name_valid_identifier()
+f657afa579c072307097122325a72f3205ac65dd UPSTREAM: bpf: btf: check name validity for various types
+30896adb9c324068d25376fa6fa9398e92672224 BACKPORT: bpf: verifier: make sure callees don't prune with caller differences
+ac497651dd0b6eed7b759547d9bca31fef732bc2 UPSTREAM: bpf: allow zero-initializing hash map seed
+18c92a227474e5653549a7d6932db0131a875605 UPSTREAM: bpf: move BPF_F_QUERY_EFFECTIVE after map flags
+f8ce0a24d0c456e5ce296d3f6ce6627dab1e6da0 UPSTREAM: bpf: btf: Break up btf_type_is_void()
+04f3b29506fe5daa87b98a8a06d35438a55246c3 UPSTREAM: bpf: btf: Add BTF_KIND_FUNC and BTF_KIND_FUNC_PROTO
+3ad12637de23ff123e023cd882cd6884a5ccc686 BACKPORT: bpf: Introduce bpf_func_info
+49f62b07c95554bb2557569fe85b093666c348dc bpf: fix a compilation error when CONFIG_BPF_SYSCALL is not defined
+ebef6179baf41a356cce69e945f95b44da75b635 UPSTREAM: bpf, lpm: make longest_prefix_match() faster
+5f86334aab43ffe18d0c59cd3d58cb6dd170dd3e UPSTREAM: bpf, tags: Fix DEFINE_PER_CPU expansion
+575c4a1e5cb2d32170dba5c217450b27475216e5 UPSTREAM: bpf: btf: fix spelling mistake "Memmber" -> "Member"
+84842c761989cf6a7c4accf4f5a4998a5f405474 UPSTREAM: bpf: btf: support proper non-jit func info
+f9ec5c74dcf456022d70d6412e6e53426c27afb4 bpf: add skb->tstamp r/w access from tc clsact and cg skb progs
+c542517d8d63cb345b4968174a5766cefdda3fb4 BACKPORT: bpf: fix pointer offsets in context for 32 bit
+d13d70b03a053e03475b22c6e2be59675bfc2aed UPSTREAM: bpf: Fix memleak in aux->func_info and aux->btf
+27d3ffe9d3cab92f51a62108803a370e0c4ae037 UPSTREAM: bpf: allow BPF read access to qdisc pkt_len
+418ba1f847faff8d6236fc26e82f6c5642de4f0b UPSTREAM: bpf: respect size hint to BPF_PROG_TEST_RUN if present
+f9c514493e17bb8ffa41568688b51c98d6fa5a6b UPSTREAM: bpf: Improve the info.func_info and info.func_info_rec_size behavior
+3dd30e2d50a69e04528fb040335ba39af716d740 UPSTREAM: bpf: Change insn_offset to insn_off in bpf_func_info
+5433db95bd35735535902d8ca2a65148c3e78b75 UPSTREAM: bpf: interpreter support BPF_ALU | BPF_ARSH
+99237e036aba5d632cc44206d18ddfda639115e4 UPSTREAM: bpf: verifier remove the rejection on BPF_ALU | BPF_ARSH
+f0a336ccf73b96f982ee42d678193c3dcdad5511 BACKPORT: bpf: Add bpf_line_info support
+e70f194eb15feee4b78c5a54d72264816625145b bpf: pass struct btf pointer to the map_check_btf() callback
+5081068b4a56734893c1e42f64323b4e9d85b42c BACKPORT: bpf: add bpffs pretty print for cgroup local storage maps
+37a18e4fba3b2ab5a3ce336db31c78c03e98494e UPSTREAM: bpf: Create a new btf_name_by_offset() for non type name use case
+3fee0013b2ade1c3939f433754d3e7f42d324bf8 BACKPORT: bpf: verbose log bpf_line_info in verifier
+e25a63335ff319d9b158c3fdfe24f69b6b131683 UPSTREAM: bpf: speed up stacksafe check
+42a53774c552cd19117fda4756264fc4b6a62b02 BACKPORT: bpf: improve stacksafe state comparison
+546d31f66669169a9eed36bc5d5d7f88117d7156 UPSTREAM: bpf: add self-check logic to liveness analysis
+b14b83adfc1b0c2b90eced7745e9b38b3ad09c8e BACKPORT: bpf: remove useless version check for prog load
+3d0ee302ec6baacd314364724a03721a682bb55a UPSTREAM: bpf: btf: refactor btf_int_bits_seq_show()
+ac6bba1af7252e1abff541403ffee876d7e0e85e UPSTREAM: bpf: btf: fix struct/union/fwd types with kind_flag
+7bc3d597bb770f3e9ffa684ff9bdb890923b7d2d UPSTREAM: bpf: enable cgroup local storage map pretty print with kind_flag
+25986ec7cd4202e27f4afc708add5dfac62a340b UPSTREAM: bpf: log struct/union attribute for forward type
+1a9dabe18003482ace5cc5d3a5ed6350368da87b UPSTREAM: bpf: Ensure line_info.insn_off cannot point to insn with zero code
+37d2c6b37d9712376719fa76eeced1f4e172b1bf UPSTREAM: bpf: verifier: teach the verifier to reason about the BPF_JSET instruction
+03b5f0f70c15a54b791906a0ce34b630c0373d57 UPSTREAM: bpf: verifier: reorder stack size check with dead code sanitization
+8fc760ff377b345d9e15e569b2759dde855a4ebc UPSTREAM: bpf: fix panic in stack_map_get_build_id() on i386 and arm32
+d4931969a54477dd0b9ee813476f7967889b666d UPSTREAM: bpf: fix bpffs bitfield pretty print
+cbf2dcb204497548eecfb4fee58298eea7161826 UPSTREAM: bpf: btf: support 128 bit integer type
+17115553772bf55817604bdcc19c83b58da4dc93 UPSTREAM: bpf: fix a (false) compiler warning
+a44e593ade440ea614fc7cd94cb3373de8be2ca9 UPSTREAM: bpf: change parameters of call/branch offset adjustment
+fe9a25f4587898d9bc19c18e68f8964db5b46588 BACKPORT: bpf: verifier: hard wire branches to dead code
+6bacd6df484888826644ffcca35f6e6d00c8047e UPSTREAM: bpf: verifier: remove dead code
+030d14ec54a37eb8343aeec453cafd65da721275 UPSTREAM: bpf: verifier: remove unconditional branches by 0
+9c975fffe69e8dcf650986b0513f0ef88b169834 BACKPORT: bpf: verifier: record original instruction index
+c2593c573e6cefb50744888e333ab09e11c4e55e BACKPORT: bpf: notify offload JITs about optimizations
+3d9223e1072011abed0e7a4ba3b3b333d7ce21cd bpf: fix inner map masking to prevent oob under speculation
+59994e2bb8b5c2236adc04cd966e777c02df78cf bpf: allow BPF programs access skb_shared_info->gso_segs field
+e136a96835857fcf50a08354ded83c2f7d7d917d BACKPORT: bpf: allocate 0x06 to new eBPF instruction class JMP32
+fa4d49ea89576a4068ff462883679b617f534e89 UPSTREAM: bpf: refactor verifier min/max code for condition jump
+6d2a0182b5443924a0545e5acd6b44edf2567f1c bpf: add skb->queue_mapping write access from tc clsact
+bd4e644aba0c5eca00bb0e643fdeb7726e24bc06 bpf: fix access to skb_shared_info->gso_segs
+63d252f60439b9460e176e92a4dc4e299fec5294 bpf: arm64: Enable arm64 jit to provide bpf_line_info
+87ca34561c7b68b44c321ede73e55701139af290 BACKPORT: bpf: Add bpf_patch_call_args prototype to include/linux/bpf.h
+8233b395296881336995990aa94bba1f498f35dd UPSTREAM: bpf: btf: allow typedef func_proto
+28bafb9605cad62e3a22061dcd45382852b478d7 UPSTREAM: bpf: fix bitrotted kerneldoc
+84f9624fa3dd97c1562653e681fc44add0efe3d2 UPSTREAM: bpf, cgroups: clean up kerneldoc warnings
+e67284548a7106e7c75ba3aee14eb13131475356 UPSTREAM: bpf: run bpf programs with preemption disabled
+4f4724be9546fadb7b0f929e5fb0895281876571 bpf: fix lockdep false positive in percpu_freelist
+32e57daf692b52ef8b5f9722fd333534ca6abeb1 bpf: Fix syscall's stackmap lookup potential deadlock
+f4059482967d2d95420e382a0931d78170d4c8ad UPSTREAM: bpf: rename stack trace map operations
+11b49ded55b5a30f1df4366f65eeb5a14a532559 bpf/syscall: allow key to be null in map functions
+2d1b11b1f0ff4f8e092e36d729819557e6ad43e1 bpf/verifier: add ARG_PTR_TO_UNINIT_MAP_VALUE
+b99066897e58f4f7854c418e74d41ebbd287e002 bpf: fix partial copy of map_ptr when dst is scalar
+184bee89827b88df587d224e2357042ee83203f4 UPSTREAM: bpf: don't set id on after map lookup with ptr_to_map_val return
+2a104eb636e93a8bb8cec5f89a9d98c23e41504e BACKPORT: bpf: add queue and stack maps
+7d7b6c52f804c0f1ecbab56d23110427f7b7495f BACKPORT: bpf: add MAP_LOOKUP_AND_DELETE_ELEM syscall
+02a7fcc1ae8bd9fef41eed859668d0d9eb8d02f6 UPSTREAM: bpf: remove unused variable
+ef43443a0919711d9e646dfb5d1d06ce74c2a7e7 BACKPORT: bpf, verifier: fix register type dump in xadd and st
+1597731432771d13bb6436ea19f364185608b3a7 UPSTREAM: bpf, verifier: reject xadd on flow key memory
+d14d110fbadddc786cacf40dbe06b45885aa48a4 UPSTREAM: bpf, verifier: remove unneeded flow key in check_helper_mem_access
+c9673214ae0c3c513be707311061b2acdec774d4 UPSTREAM: bpf, verifier: avoid retpoline for map push/pop/peek operation
+d821d38df462a314678d378eab3827efa4e917c9 BACKPORT: bpf: introduce bpf_spin_lock
+fbfd1bd66a39dda8f927aa85a76af8fe85f4dcba UPSTREAM: bpf: add support for bpf_spin_lock to cgroup local storage
+616be08187ea6d11c19d93eb18e89b6668a3c628 BACKPORT: bpf: introduce BPF_F_LOCK flag
+f4376febbb72edcb663e37313fca88b7922c28df UPSTREAM: bpf: Fix narrow load on a bpf_sock returned from sk_lookup()
+2f88df664613c853dd1c4cda2d8512923d5f46cc BACKPORT: bpf: Add a bpf_sock pointer to __sk_buff and a bpf_sk_fullsock helper
+d581287c2fbcdb5bc84668a70038a6494723683d UPSTREAM: bpf: Add state, dst_ip4, dst_ip6 and dst_port to bpf_sock
+38891442e069b8386d2fdddfef66b606d7679cb1 BACKPORT: bpf: Add struct bpf_tcp_sock and BPF_FUNC_tcp_sock
+a1a829a00a6247d83358fa8959cccac2d627a6fc bpf: fix direct packet write into pop/peek helpers
+9c08235159c83a307a35a00cfaf6deed121e9e21 bpf: fix leaking uninitialized memory on pop/peek helpers
+47300fac55c37fb12b7b637c308af010074fb57c bpf: do not restore dst_reg when cur_state is freed
+0746b81ea944dbe6526f38d9967161fa7155ddae BACKPORT: bpf, lpm: fix lookup bug in map_delete_elem
+1e9f25aa63caa2ef161845012fcb90c1f50ee19f UPSTREAM: bpf: decrease usercnt if bpf_map_new_fd() fails in bpf_map_get_fd_by_id()
+adbed9823c4953262a977046c08a72bc7f41a94b UPSTREAM: bpf: set inner_map_meta->spin_lock_off correctly
+517d795a0ba7c5954a9fced05bd5e15f82fd28b9 UPSTREAM: bpf: drop refcount if bpf_map_new_fd() fails in map_create()
+70cf83c0f80e99846418833f6edd435d70696b74 UPSTREAM: bpf: fix sanitation rewrite in case of non-pointers
+4046433fca28cc1622c1ee35a6fc7e354a806a7d BACKPORT: bpf: fix replace_map_fd_with_map_ptr's ldimm64 second imm field
+b448063a47bf7b6171074e195cd97900ab7bc4de BACKPORT: bpf: verifier: propagate liveness on all frames
+5a3beecc2d0404e138736fc4aea1b683d8ee150d UPSTREAM: bpf: remove incorrect 'verifier bug' warning
+a3ae28abd228a02fc810d22759b09690d34af4f4 UPSTREAM: bpf: Support variable offset stack access from helpers
+5822dee49376f32e3a631753546c139681bda5d3 BACKPORT: kbuild: add ability to generate BTF type info for vmlinux
+919018404d18d5b86ba261ee559eee0507aba850 UPSTREAM: bpf: add verifier stats and log_level bit 2
+1672d3cb6d7800743e24ae62b9618c1d1e8a2387 UPSTREAM: bpf: improve verification speed by droping states
+fa12a267f42503efdbd0030adade9d3ad76b9bef UPSTREAM: bpf: improve verification speed by not remarking live_read
+6d58ecfd41d70907618d3438559dcc202685c4bb BACKPORT: bpf: convert temp arrays to kvcalloc
+797bce1a185bca3357b4c6caf889bfde1de98b8c UPSTREAM: bpf: verbose jump offset overflow check
+0280ebd53ba84ae1019dcf5b5c71aedc1667bf89 UPSTREAM: bpf: increase complexity limit and maximum program size
+a93f29cacd42ad15fb3c6eaf355054888d108c30 UPSTREAM: bpf: increase verifier log limit
+ca66dbb8fd54f2f0e3a0731e3665053e1294d8ff UPSTREAM: bpf: Reject indirect var_off stack access in raw mode
+ca1715b815cb1f8fa8a62449915ad50c6a8a6013 UPSTREAM: bpf: Reject indirect var_off stack access in unpriv mode
+26090608efee445528db3d39c35780a1e6837d55 UPSTREAM: bpf: Sanity check max value for var_off stack access
+df2e49a9c3986329d9c94c1c7a56125591cb7677 UPSTREAM: bpf: Add missed newline in verifier verbose log
+3b0f8cef2f443d4ac728e16cac3fb45c6cd0c894 BACKPORT: bpf: implement lookup-free direct value access for maps
+7b997bac0812e0a51b21cd9bff4c5338440ab607 UPSTREAM: bpf: do not retain flags that are not tied to map lifetime
+27c2af72efb35aa667e3836e31bc2191aa6b6d7f UPSTREAM: bpf: add program side {rd, wr}only support for maps
+ea47be402ec3a95c588f14b89758ee3a683d6a11 BACKPORT: bpf: add syscall side map freeze support
+1e86455dddbc92add21a91d0a6997eb50e6e47cc UPSTREAM: bpf: allow . char as part of the object name
+88511ba2b7c8ab30b2e0435817f2e2b17bb290b1 BACKPORT: bpf: add specification for BTF Var and DataSec kinds
+c62c2216bb1944f74166638301e0fbf24b5f7f8f UPSTREAM: bpf: kernel side support for BTF Var and DataSec
+9d6daa2afe0243d1dbca8705ba4f42483d49453a UPSTREAM: bpf: allow for key-less BTF in array map
+ef00cdaecb580611a39dd7f261596ec3d6c6ea7e UPSTREAM: bpf: support input __sk_buff context in BPF_PROG_TEST_RUN
+48e62b9629a927b791c42419f25c847e3d00005f UPSTREAM: bpf: Add base proto function for cgroup-bpf programs
+e6595742cf944f6baba773f4cfeac5eb2320b2e1 BACKPORT: bpf: Sysctl hook
+8daa71e3986d76c1981e67e436a3a23750951e9a BACKPORT: bpf: Introduce bpf_sysctl_get_name helper
+dcc4703746873320a59ea4c126b8b6d2af348284 UPSTREAM: bpf: Introduce bpf_sysctl_get_current_value helper
+d91d63ff2b6e1c7f6892c0692b3a70674c648787 UPSTREAM: bpf: Introduce bpf_sysctl_{get,set}_new_value helpers
+da8f1b3542cf1de2953760eda2ee8f95eae858be UPSTREAM: bpf: Add file_pos field to bpf_sysctl ctx
+f19498da68394cbda780220dc0038a8a159f122d UPSTREAM: bpf: Introduce bpf_strtol and bpf_strtoul helpers
+2e8e32380afc0ba271332edd49a6788c07f7ad06 UPSTREAM: bpf: Introduce ARG_PTR_TO_{INT,LONG} arg types
+2f560b46bd602b760b2c90d30fde92d6adca227e UPSTREAM: bpf: Fix distinct pointer types warning for ARCH=i386
+ae1fe9797c44c037be4fbc8d0a3b35268dee983f UPSTREAM: bpf: refactor propagate_liveness to eliminate duplicated for loop
+bff6065ce7c0155c578003de5b706f0f5025b045 UPSTREAM: bpf: refactor propagate_liveness to eliminate code redundance
+71824beaa8353c936abec6e2d951f275eb934db1 UPSTREAM: bpf: factor out reg and stack slot propagation into "propagate_liveness_reg"
+7a0b41042a03c0b9ec593274cd41a9321e0ab6e9 UPSTREAM: bpf: refactor "check_reg_arg" to eliminate code redundancy
+bdcfe476f03ccbe20effe9ceec818457b6b5f7f5 UPSTREAM: kbuild: handle old pahole more gracefully when generating BTF
+92cd4dc9c4c4ddc9610898d56abc09ec2f4f0df4 BACKPORT: bpf: add map helper functions push, pop, peek in more BPF programs
+955a24c39d9d729e4d71ac6b93a405f876b6889a UPSTREAM: bpf: use BPF_CAST_CALL for casting bpf call
+9f34e7e1d517f35c5b98ad7752d4658ece7f8fa3 UPSTREAM: bpf: remove global variables
+7070e50ecea3836f8733b9b7613bd5e76b41d0ad BACKPORT: bpf: drop bpf_verifier_lock
+4b3be11e525aeb581130d7fa9e895634346213c1 UPSTREAM: flow_dissector: fix build failure without CONFIG_NET
+079b66130d51716aea2badaf7d1084175cfffe77 UPSTREAM: bpf: support BPF_PROG_QUERY for BPF_FLOW_DISSECTOR attach_type
+2b3ae7b4ee8650b9757988e24fdd5a4434f3fe1c BACKPORT: new inode method: ->free_inode()
+d1c452be8f88e18aad4608ed9e432b9841980d5c UPSTREAM: bpf, arm64: remove prefetch insn in xadd mapping
+fb9d7ff072a82359bbdde15ec78966e96c3f412a UPSTREAM: bpf, arm64: use more scalable stadd over ldxr / stxr loop in xadd
+9246addfce6daeec83f978f8e754c86f21156ee9 BACKPORT: bpf: mark registers in all frames after pkt/null checks
+b8cafa75addccf075b1bb7b8e3f8853ff9c0265f BACKPORT: bpf: add writable context for raw tracepoints
+5769ed6f47d6c5944a197c47461eb6ae87da1191 BACKPORT: bpf: Introduce bpf sk local storage
+72420de6e4c06036421f325768e3974147c69cdb bpf: sk storage needs refcount
+7e8360904b1cb096722b61db77b0e2a8e30a6577 UPSTREAM: bpf: Use PTR_ERR_OR_ZERO in bpf_fd_sk_storage_update_elem()
+c4c30b5b71ee38a620de1f548ea90cb53e86fe31 UPSTREAM: kbuild: tolerate missing pahole when generating BTF
+3911976db1c85ba28cc879849e88536801acec47 UPSTREAM: bpf: fix out of bounds backwards jmps due to dead code removal
+64d1c87479e54bddc3ef63441eedb56aa760cb40 UPSTREAM: bpf: fix undefined behavior in narrow load handling
+6ffaad41bed6e025f52e5f5de072d4e5ce17100a UPSTREAM: bpf: devmap: fix use-after-free Read in __dev_map_entry_free
+61adfd20c5f0686a11910f0e4cd823650717399d UPSTREAM: bpf: add map_lookup_elem_sys_only for lookups from syscall side
+23ca623db2a4b03323d0f82ffdd319e9a93ea1c8 UPSTREAM: bpf, lru: avoid messing with eviction heuristics upon syscall lookup
+65abde44d7eed840fb3e59d893b63b5b70f290ea UPSTREAM: bpf: bump jmp sequence limit
+7a54fabc0323f07e68c248d65f06490ae8ee7db3 UPSTREAM: bpf: cleanup explored_states
+f82d542c54736961abe4ff7cb52f8a4d9c77ca97 UPSTREAM: bpf: split explored_states
+3522218f7eaf098926a532327f90104dcbdd9d25 BACKPORT: bpf: convert explored_states to hash table
+f2a955c4a7e3bc7b6b1c9c2fb1948400116c51ec UPSTREAM: bpf: verifier: mark verified-insn with sub-register zext flag
+494d1ebbb17453b9f5e5a22200db48b342d2275a BACKPORT: bpf: verifier: mark patched-insn with sub-register zext flag
+8e666149fa4341c8a1ffc73ca5d00b9408113e98 BACKPORT: bpf: introduce new mov32 variant for doing explicit zero extension
+b24576ea2e408d35fe14ba88bf3c80fb69056dd3 UPSTREAM: bpf: verifier: insert zero extension according to analysis result
+8501fe7ce8b67bc375e89119aa3fc511e3b56676 BACKPORT: bpf: introduce new bpf prog load flags "BPF_F_TEST_RND_HI32"
+8a1dccc355a49b9244226547e225b5abc88cce63 UPSTREAM: bpf: verifier: randomize high 32-bit when BPF_F_TEST_RND_HI32 is set
+0fb76ac577edfb7a3dda231bfae86f880237b30f BACKPORT: bpf: remove __rcu annotations from bpf_prog_array
+133ba2679a81fb917b3ae75163852b27b34074d3 UPSTREAM: bpf: add memlock precharge check for cgroup_local_storage
+e2786b99c84a63af861c898248f6d4c959bba761 UPSTREAM: bpf: fix unconnected udp hooks
+1726f37d85c595d05fa689c5d25114a2fbe3ad7c UPSTREAM: bpf: lpm_trie: check left child of last leftmost node for NULL
+f2998d6adb3c917558809ffd25f71da91026030e UPSTREAM: bpf: track spill/fill of constants
+c54fe7c2e2dd95e451fc9d4cc838b5f347a10697 UPSTREAM: bpf: introduce bounded loops
+e3626c56a0887bd0d9f95fda9e94d35ca00e830d UPSTREAM: bpf: fix callees pruning callers
+21b4a1575dc0c6c7802098f4c97ea66caea25f7f UPSTREAM: bitmap.h, perf/core: Fix the mask in perf_output_sample_regs()
+cdbe445ff349a6ea8fe9ed54b832e0e72caf3916 BACKPORT: bpf: precise scalar_value tracking
+58d09b86042ee9f0dfa1e144e291c1962ceca3f7 UPSTREAM: bpf: devmap: fix wrong interface selection in notifier_call
+b18f6b03b09f53691b903dd60ae86da259844ce3 UPSTREAM: bpf: fix NULL deref in btf_type_is_resolve_source_only
+3a594c2476fcefb8e8e8be17a64dda6d24a18304 BACKPORT: bpf: implement getsockopt and setsockopt hooks
+8a177fdf6f872dbe111c81b60a4df61076788231 UPSTREAM: devmap: Allow map lookups from eBPF
+23eda2b22a623acd918477b505f837b9457eec67 UPSTREAM: bpf: fix precision tracking
+f951b6f60c64100797236da4139e0d6226a5311b BACKPORT: bpf: fix uapi bpf_prog_info fields alignment
+896dfa0fe29e7eee308a08afdf30f99c7d272a4d UPSTREAM: bpf: cgroup: Fix build error without CONFIG_NET
+84a9585bcc8368d0a6e08581b1549e4485298d42 UPSTREAM: bpf: fix precision bit propagation for BPF_ST instructions
+d7cb9ef3c982c2fd9b3ac3a0ab33a3c86fc7255d UPSTREAM: bpf: fix BTF verifier size resolution logic
+c4e766be0991111edfee35fc5330aeabfb48b455 kernel: bpf: devmap: Create __dev_map_alloc_node
+360e8b6929b46743c31835c1d51a177b02bb1edc BACKPORT: xdp: Add devmap_hash map type for looking up devices by hashed index
+f4915c47ab3e2e8532a663f79cf12b8ba85c13ec bpf: always allocate at least 16 bytes for setsockopt hook
+51d99bb8bf0c2e1b6a930548e350e0c88320d5bd BACKPORT: kbuild: allow architectures to use thin archives instead of ld -r
+5be117324eb933a3e8917eaef5b2a92542aeb618 UPSTREAM: kbuild: kallsyms allow 3-pass generation if symbols size has changed
+039c077cc44d3314559688b51127a6f9b0d25e98 UPSTREAM: kbuild: minor improvement for thin archives build
+b980fa2cbfe2ab8d512dfcd365a7da81e2a9741b UPSTREAM: kbuild: thin archives for multi-y targets
+b2e212ed353fb3ea8d674eed21f008519178656c UPSTREAM: kbuild: thin archives final link close --whole-archives option
+637abdea1d8567b6869b0be65def1d642975afaf UPSTREAM: kbuild: thin archives use P option to ar
+afb566c162c27647404e48aed187a3625b32ba71 UPSTREAM: kbuild: handle libs-y archives separately from built-in.o archives
+82300462d88e29736ba94d69de160ff96a7437ab BACKPORT: kbuild: remove incremental linking option
+e34562c4abb2ab5c9b7336391752295c41b7c90c BACKPORT: btf: expose BTF info through sysfs
+ddaffd8481c133289294799e5a134dba53f1a064 BACKPORT: btf: rename /sys/kernel/btf/kernel into /sys/kernel/btf/vmlinux
+8cfe0b3e3de47d5d46433c25b7a8fa11e1d406db UPSTREAM: btf: fix return value check in btf_vmlinux_init()
+0f155f91367c32e3b6d9d4310d5727c0cc23feaf UPSTREAM: bpf: export bpf_map_inc_not_zero
+1c1feaea1e6ec1a0a4a801bde576413d79a66544 UPSTREAM: bpf: Clean up indentation issue in BTF kflag processing
+612f47598a1b42962f7abfcbfff8b19f89f557c5 UPSTREAM: bpf: add BTF ids in procfs for file descriptors to BTF objects
+8d6ee2b540e695cb27906c4b709b3914f0a918b0 bpf: Don't return EINVAL from {get,set}sockopt when optlen > PAGE_SIZE
+5fb2d11c885fbb6e67967231de6ba72ada6eb743 UPSTREAM: net: bpf: Make bpf_ktime_get_ns() available to non GPL programs
+3c368f20c85857c7c51ed674cac6c5afe967b4ae bpf: Don't leak memory in bpf getsockopt when optlen == 0
+d4d12a037ef6cb29a9d81adacfa119bfb9d3b898 UPSTREAM: bpf: Remove MTU check in __bpf_skb_max_len
+d16c6eab592f1cdc52e764933d1dd882079190ba bpf: Fix truncation handling for mod32 dst reg wrt zero
+2c36afc43d726ab634bee3fc76b8fd6f98c31bd2 UPSTREAM: bpf: Add gso_size to __sk_buff
+b1f62ad9310c15d6196ddb38fa5e82ff9cb989cf BACKPORT: bpf: add bpf_ktime_get_boot_ns()
+a1cf1c63ebc1d71e7116ebe9a554a6c806f72c16 bpf: Handle BPF_EXIST and BPF_NOEXIST for LPM trie
+6d53893e0e29d3922b66b41011fd4e575f3aa7cc bpf: Fix exact match conditions in trie_get_next_key()
+1905bd6b21663a575b4fb7c26a93473110925732 bpf_lru_list: Read double-checked variable once without lock
+8b2c7ac8390831f32f9b94adeb9f6a469e3b14c2 UPSTREAM: bpf: Fix bpf jit kallsym access

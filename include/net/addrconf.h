@@ -90,10 +90,9 @@ int __ipv6_get_lladdr(struct inet6_dev *idev, struct in6_addr *addr,
 		      u32 banned_flags);
 int ipv6_get_lladdr(struct net_device *dev, struct in6_addr *addr,
 		    u32 banned_flags);
-int ipv4_rcv_saddr_equal(const struct sock *sk, const struct sock *sk2,
+int inet_rcv_saddr_equal(const struct sock *sk, const struct sock *sk2,
 			 bool match_wildcard);
-int ipv6_rcv_saddr_equal(const struct sock *sk, const struct sock *sk2,
-			 bool match_wildcard);
+int inet_rcv_saddr_any(const struct sock *sk);
 void addrconf_join_solict(struct net_device *dev, const struct in6_addr *addr);
 void addrconf_leave_solict(struct inet6_dev *idev, const struct in6_addr *addr);
 
@@ -204,6 +203,13 @@ struct ipv6_stub {
 	struct neigh_table *nd_tbl;
 };
 extern const struct ipv6_stub *ipv6_stub __read_mostly;
+
+/* A stub used by bpf helpers. Similarly ugly as ipv6_stub */
+struct ipv6_bpf_stub {
+	int (*inet6_bind)(struct sock *sk, struct sockaddr *uaddr, int addr_len,
+			  bool force_bind_address_no_port, bool with_lock);
+};
+extern const struct ipv6_bpf_stub *ipv6_bpf_stub __read_mostly;
 
 /*
  * identify MLD packets for MLD filter exceptions

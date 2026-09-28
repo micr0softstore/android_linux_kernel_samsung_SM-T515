@@ -1037,9 +1037,13 @@ static int __tcp_transmit_skb(struct sock *sk, struct sk_buff *skb,
 	int err;
 
 	BUG_ON(!skb || !tcp_skb_pcount(skb));
+	tp = tcp_sk(sk);
 
 	if (clone_it) {
 		skb_mstamp_get(&skb->skb_mstamp);
+		TCP_SKB_CB(skb)->tx.in_flight = TCP_SKB_CB(skb)->end_seq
+			- tp->snd_una;
+		tcp_rate_skb_sent(sk, skb);
 
 		if (unlikely(skb_cloned(skb)))
 			skb = pskb_copy(skb, gfp_mask);
@@ -1050,7 +1054,6 @@ static int __tcp_transmit_skb(struct sock *sk, struct sk_buff *skb,
 	}
 
 	inet = inet_sk(sk);
-	tp = tcp_sk(sk);
 	tcb = TCP_SKB_CB(skb);
 	memset(&opts, 0, sizeof(opts));
 
@@ -1137,8 +1140,10 @@ static int __tcp_transmit_skb(struct sock *sk, struct sk_buff *skb,
 	if (likely(tcb->tcp_flags & TCPHDR_ACK))
 		tcp_event_ack_sent(sk, tcp_skb_pcount(skb), rcv_nxt);
 
-	if (skb->len != tcp_header_size)
+	if (skb->len != tcp_header_size) {
 		tcp_event_data_sent(tp, sk);
+		tp->data_segs_out += tcp_skb_pcount(skb);
+	}
 
 	if (after(tcb->end_seq, tp->snd_nxt) || tcb->seq == tcb->end_seq)
 		TCP_ADD_STATS(sock_net(sk), TCP_MIB_OUTSEGS,
@@ -1347,6 +1352,9 @@ int tcp_fragment(struct sock *sk, struct sk_buff *skb, u32 len,
 	/* Fix up tso_factor for both original and new SKB.  */
 	tcp_set_skb_tso_segs(skb, mss_now);
 	tcp_set_skb_tso_segs(buff, mss_now);
+
+	/* Update delivered info for the new segment */
+	TCP_SKB_CB(buff)->tx = TCP_SKB_CB(skb)->tx;
 
 	/* If this packet has been sent out already, we must
 	 * adjust the various packet counters.
@@ -2680,6 +2688,20 @@ u32 __tcp_select_window(struct sock *sk)
 	return window;
 }
 
+void tcp_skb_collapse_tstamp(struct sk_buff *skb,
+			     const struct sk_buff *next_skb)
+{
+	const struct skb_shared_info *next_shinfo = skb_shinfo(next_skb);
+	u8 tsflags = next_shinfo->tx_flags & SKBTX_ANY_TSTAMP;
+
+	if (unlikely(tsflags)) {
+		struct skb_shared_info *shinfo = skb_shinfo(skb);
+
+		shinfo->tx_flags |= tsflags;
+		shinfo->tskey = next_shinfo->tskey;
+	}
+}
+
 /* Collapses two adjacent SKB's during retransmission. */
 static void tcp_collapse_retrans(struct sock *sk, struct sk_buff *skb)
 {
@@ -2722,6 +2744,8 @@ static void tcp_collapse_retrans(struct sock *sk, struct sk_buff *skb)
 		tp->retransmit_skb_hint = skb;
 
 	tcp_adjust_pcount(sk, next_skb, tcp_skb_pcount(next_skb));
+
+	tcp_skb_collapse_tstamp(skb, next_skb);
 
 	sk_wmem_free_skb(sk, next_skb);
 }

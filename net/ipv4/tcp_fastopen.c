@@ -201,6 +201,14 @@ static struct sock *tcp_fastopen_create_child(struct sock *sk,
 
 		if (likely(skb2)) {
 			skb_dst_drop(skb2);
+			/* segs_in has been initialized to 1 in tcp_create_openreq_child().
+			 * Hence, reset segs_in to 0 before calling tcp_segs_in()
+			 * to avoid double counting.  Also, tcp_segs_in() expects
+			 * skb->len to include the tcp_hdrlen.  Hence, it should
+			 * be called before __skb_pull().
+			 */
+			tp->segs_in = 0;
+			tcp_segs_in(tp, skb2);
 			__skb_pull(skb2, tcp_hdrlen(skb));
 			skb_set_owner_r(skb2, child);
 			__skb_queue_tail(&child->sk_receive_queue, skb2);

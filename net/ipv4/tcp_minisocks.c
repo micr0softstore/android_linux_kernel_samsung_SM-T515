@@ -538,7 +538,7 @@ struct sock *tcp_create_openreq_child(const struct sock *sk,
 
 		newtp->srtt_us = 0;
 		newtp->mdev_us = jiffies_to_usecs(TCP_TIMEOUT_INIT);
-		newtp->rtt_min[0].rtt = ~0U;
+		minmax_reset(&newtp->rtt_min, tcp_time_stamp, ~0U);
 		newicsk->icsk_rto = TCP_TIMEOUT_INIT;
 		newicsk->icsk_ack.lrcvtime = tcp_time_stamp;
 
@@ -561,6 +561,9 @@ struct sock *tcp_create_openreq_child(const struct sock *sk,
 		 */
 		newtp->snd_cwnd = TCP_INIT_CWND;
 		newtp->snd_cwnd_cnt = 0;
+
+		/* There's a bubble in the pipe until at least the first ACK. */
+		newtp->app_limited = ~0U;
 
 		tcp_init_xmit_timers(newsk);
 		newtp->write_seq = newtp->pushed_seq = treq->snt_isn + 1;
@@ -923,7 +926,7 @@ int tcp_child_process(struct sock *parent, struct sock *child,
 	struct sock *meta_sk = mptcp(tcp_sk(child)) ? mptcp_meta_sk(child) : child;
 #endif
 
-	tcp_sk(child)->segs_in += max_t(u16, 1, skb_shinfo(skb)->gso_segs);
+	tcp_segs_in(tcp_sk(child), skb);
 #ifdef CONFIG_MPTCP
 	if (!sock_owned_by_user(meta_sk)) {
 #else

@@ -1,10 +1,31 @@
-config RC_CORE
-	tristate
-	depends on MEDIA_RC_SUPPORT
+menuconfig RC_CORE
+	tristate "Remote Controller support"
 	depends on INPUT
 	default y
+	---help---
+	  Enable support for Remote Controllers on Linux. This is
+	  needed in order to support several video capture adapters,
+	  standalone IR receivers/transmitters, and RF receivers.
 
+	  Enable this option if you have a video capture board even
+	  if you don't need IR, as otherwise, you may not be able to
+	  compile the driver for your adapter.
+
+	  Say Y when you have a TV or an IR device.
+
+if RC_CORE
 source "drivers/media/rc/keymaps/Kconfig"
+
+config BPF_LIRC_MODE2
+	bool "Support for eBPF programs attached to lirc devices"
+	depends on BPF_SYSCALL
+	depends on RC_CORE=y
+	help
+	   Allow attaching eBPF programs to a lirc device using the bpf(2)
+	   syscall command BPF_PROG_ATTACH. This is supported for raw IR
+	   receivers.
+	   These eBPF programs can be used to decode IR into scancodes, for
+	   IR protocols not supported by the kernel decoders.
 
 menuconfig RC_DECODERS
         bool "Remote controller decoders"
@@ -389,3 +410,5 @@ config IR_SUNXI
 	   be called sunxi-ir.
 
 endif #RC_DEVICES
+
+endif #RC_CORE
