@@ -315,6 +315,44 @@ unsigned long vm_mmap(struct file *file, unsigned long addr,
 }
 EXPORT_SYMBOL(vm_mmap);
 
+/**
+ * kvmalloc_node - allocate physically contiguous memory with vmalloc fallback
+ * @size: number of bytes to allocate
+ * @flags: allocation flags, compatible with GFP_KERNEL for vmalloc fallback
+ * @node: preferred NUMA node, or NUMA_NO_NODE
+ *
+ * The vmalloc fallback can sleep, and is only used for GFP_KERNEL-compatible
+ * requests.  Reclaim modifiers __GFP_NORETRY, __GFP_REPEAT and __GFP_NOFAIL
+ * are not supported.  Free the returned memory with kvfree().
+ */
+void *kvmalloc_node(size_t size, gfp_t flags, int node)
+{
+	gfp_t kmalloc_flags = flags;
+	void *ret;
+
+	/* vmalloc uses GFP_KERNEL for its internal allocations. */
+	if (unlikely((flags & GFP_KERNEL) != GFP_KERNEL))
+		return kmalloc_node(size, flags, node);
+
+	/* Avoid OOM and allocation warnings while a fallback is available. */
+	if (size > PAGE_SIZE)
+		kmalloc_flags |= __GFP_NORETRY | __GFP_NOWARN;
+
+	ret = kmalloc_node(size, kmalloc_flags, node);
+	if (ret || size <= PAGE_SIZE)
+		return ret;
+
+#ifdef CONFIG_MMU
+	/* __vmalloc_node_range() validates the page-aligned allocation size. */
+	return __vmalloc_node_range(size, 1, VMALLOC_START, VMALLOC_END,
+				    flags, PAGE_KERNEL, 0, node,
+				    __builtin_return_address(0));
+#else
+	return NULL;
+#endif
+}
+EXPORT_SYMBOL(kvmalloc_node);
+
 void kvfree(const void *addr)
 {
 	if (is_vmalloc_addr(addr))
