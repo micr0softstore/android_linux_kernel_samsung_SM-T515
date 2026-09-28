@@ -585,6 +585,30 @@ unsigned int tcp_poll(struct file *file, struct socket *sock, poll_table *wait)
 }
 EXPORT_SYMBOL(tcp_poll);
 
+/* Return bytes available to a stream reader. The socket is locked. */
+int tcp_inq(struct sock *sk)
+{
+	struct tcp_sock *tp = tcp_sk(sk);
+	int answ;
+
+	if ((1 << sk->sk_state) &
+	    (TCPF_LISTEN | TCPF_SYN_SENT | TCPF_SYN_RECV))
+		return 0;
+
+	if (sock_flag(sk, SOCK_URGINLINE) || !tp->urg_data ||
+	    before(tp->urg_seq, tp->copied_seq) ||
+	    !before(tp->urg_seq, tp->rcv_nxt)) {
+		answ = tp->rcv_nxt - tp->copied_seq;
+		if (answ && sock_flag(sk, SOCK_DONE))
+			answ--;
+	} else {
+		answ = tp->urg_seq - tp->copied_seq;
+	}
+
+	return answ;
+}
+EXPORT_SYMBOL(tcp_inq);
+
 int tcp_ioctl(struct sock *sk, int cmd, unsigned long arg)
 {
 	struct tcp_sock *tp = tcp_sk(sk);
@@ -1119,8 +1143,7 @@ int tcp_sendpage_locked(struct sock *sk, struct page *page, int offset,
 	if (!(sk->sk_route_caps & NETIF_F_SG) ||
 	    !(sk->sk_route_caps & NETIF_F_ALL_CSUM))
 #endif
-		return sock_no_sendpage(sk->sk_socket, page, offset, size,
-					flags);
+		return sock_no_sendpage_locked(sk, page, offset, size, flags);
 
 	return do_tcp_sendpages(sk, page, offset, size, flags);
 }

@@ -1501,6 +1501,9 @@ static void sock_copy(struct sock *nsk, const struct sock *osk)
 	nsk->sk_security = sptr;
 	security_sk_clone(osk, nsk);
 #endif
+#ifdef CONFIG_BPF_SYSCALL
+	RCU_INIT_POINTER(nsk->sk_bpf_storage, NULL);
+#endif
 }
 
 void sk_prot_clear_portaddr_nulls(struct sock *sk, int size)

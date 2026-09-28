@@ -1,4 +1,5 @@
 
 config STREAM_PARSER
 	tristate
+	depends on INET
 	default y

@@ -26,6 +26,7 @@
 #include <net/strparser.h>
 #include <net/netns/generic.h>
 #include <net/sock.h>
+#include <net/tcp.h>
 
 static struct workqueue_struct *strp_wq;
 
@@ -51,7 +52,7 @@ static void strp_abort_rx_strp(struct strparser *strp, int err)
 
 	/* Unrecoverable error in receive */
 
-	del_timer(&strp->rx_msg_timer);
+	cancel_delayed_work(&strp->rx_delayed_work);
 
 	if (strp->rx_stopped)
 		return;
@@ -65,8 +66,10 @@ static void strp_abort_rx_strp(struct strparser *strp, int err)
 
 static void strp_start_rx_timer(struct strparser *strp)
 {
-	if (strp->sk->sk_rcvtimeo)
-		mod_timer(&strp->rx_msg_timer, strp->sk->sk_rcvtimeo);
+	if (strp->sk->sk_rcvtimeo &&
+	    strp->sk->sk_rcvtimeo != MAX_SCHEDULE_TIMEOUT)
+		queue_delayed_work(strp_wq, &strp->rx_delayed_work,
+				   strp->sk->sk_rcvtimeo);
 }
 
 /* Lower lock held */
@@ -81,7 +84,7 @@ static void strp_parser_err(struct strparser *strp, int err,
 
 static inline int strp_peek_len(struct strparser *strp)
 {
-	return INT_MAX;
+	return tcp_inq(strp->sk);
 }
 
 /* Lower socket lock held */
@@ -244,7 +247,7 @@ static int strp_recv(read_descriptor_t *desc, struct sk_buff *orig_skb,
 				} else {
 					strp->rx_interrupted = 1;
 				}
-				strp_parser_err(strp, err, desc);
+				strp_parser_err(strp, len, desc);
 				break;
 			} else if (len > strp->sk->sk_rcvbuf) {
 				/* Message length exceeds maximum allowed */
@@ -306,7 +309,7 @@ static int strp_recv(read_descriptor_t *desc, struct sk_buff *orig_skb,
 		eaten += (cand_len - extra);
 
 		/* Hurray, we have a new message! */
-		del_timer(&strp->rx_msg_timer);
+		cancel_delayed_work(&strp->rx_delayed_work);
 		strp->rx_skb_head = NULL;
 		STRP_STATS_INCR(strp->stats.rx_msgs);
 
@@ -335,15 +338,17 @@ static int default_read_sock_done(struct strparser *strp, int err)
 /* Called with lock held on lower socket */
 static int strp_read_sock(struct strparser *strp)
 {
-	//struct socket *sock = strp->sk->sk_socket;
 	read_descriptor_t desc;
+	int ret;
 
 	desc.arg.data = strp;
 	desc.error = 0;
 	desc.count = 1; /* give more than one skb per call */
 
 	/* sk should be locked here, so okay to do read_sock */
-	//sock->ops->read_sock(strp->sk, &desc, strp_recv);
+	ret = tcp_read_sock(strp->sk, &desc, strp_recv);
+	if (ret < 0 && !desc.error)
+		desc.error = ret;
 
 	desc.error = strp->cb.read_sock_done(strp, desc.error);
 
@@ -385,7 +390,6 @@ EXPORT_SYMBOL_GPL(strp_data_ready);
 
 static void do_strp_rx_work(struct strparser *strp)
 {
-	read_descriptor_t rd_desc;
 	struct sock *csk = strp->sk;
 
 	/* We need the read lock to synchronize with strp_data_ready. We
@@ -393,16 +397,11 @@ static void do_strp_rx_work(struct strparser *strp)
 	 */
 	lock_sock(csk);
 
-	if (unlikely(csk->sk_user_data != strp))
-		goto out;
-
 	if (unlikely(strp->rx_stopped))
 		goto out;
 
 	if (strp->rx_paused)
 		goto out;
-
-	rd_desc.arg.data = strp;
 
 	if (strp_read_sock(strp) == -ENOMEM)
 		queue_work(strp_wq, &strp->rx_work);
@@ -416,34 +415,35 @@ static void strp_rx_work(struct work_struct *w)
 	do_strp_rx_work(container_of(w, struct strparser, rx_work));
 }
 
-static void strp_rx_msg_timeout(unsigned long arg)
+static void strp_rx_msg_timeout(struct work_struct *work)
 {
-	struct strparser *strp = (struct strparser *)arg;
+	struct strparser *strp = container_of(to_delayed_work(work),
+						struct strparser, rx_delayed_work);
 
-	/* Message assembly timed out */
-	STRP_STATS_INCR(strp->stats.rx_msg_timeouts);
 	lock_sock(strp->sk);
-	strp->cb.abort_parser(strp, ETIMEDOUT);
+	if (!strp->rx_stopped && strp->rx_skb_head) {
+		STRP_STATS_INCR(strp->stats.rx_msg_timeouts);
+		strp->cb.abort_parser(strp, ETIMEDOUT);
+	}
 	release_sock(strp->sk);
 }
 
 int strp_init(struct strparser *strp, struct sock *csk,
 	      struct strp_callbacks *cb)
 {
-	//struct socket *sock = csk->sk_socket;
-
 	if (!cb || !cb->rcv_msg || !cb->parse_msg)
 		return -EINVAL;
 
-	//if (!sock->ops->read_sock || !sock->ops->peek_len)
-	//	return -EAFNOSUPPORT;
+	if (!csk || csk->sk_type != SOCK_STREAM ||
+	    csk->sk_protocol != IPPROTO_TCP ||
+	    (csk->sk_family != AF_INET && csk->sk_family != AF_INET6))
+		return -EAFNOSUPPORT;
 
 	memset(strp, 0, sizeof(*strp));
 
 	strp->sk = csk;
 
-	setup_timer(&strp->rx_msg_timer, strp_rx_msg_timeout,
-		    (unsigned long)strp);
+	INIT_DELAYED_WORK(&strp->rx_delayed_work, strp_rx_msg_timeout);
 
 	INIT_WORK(&strp->rx_work, strp_rx_work);
 
@@ -474,7 +474,7 @@ void strp_done(struct strparser *strp)
 {
 	WARN_ON(!strp->rx_stopped);
 
-	del_timer_sync(&strp->rx_msg_timer);
+	cancel_delayed_work_sync(&strp->rx_delayed_work);
 	cancel_work_sync(&strp->rx_work);
 
 	if (strp->rx_skb_head) {
@@ -500,11 +500,12 @@ static int __init strp_mod_init(void)
 {
 	strp_wq = create_singlethread_workqueue("kstrp");
 
-	return 0;
+	return strp_wq ? 0 : -ENOMEM;
 }
 
 static void __exit strp_mod_exit(void)
 {
+	destroy_workqueue(strp_wq);
 }
 module_init(strp_mod_init);
 module_exit(strp_mod_exit);

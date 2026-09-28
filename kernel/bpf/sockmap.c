@@ -102,6 +102,7 @@ struct smap_psock {
 	/* datapath variables */
 	struct sk_buff_head rxqueue;
 	bool strp_enabled;
+	bool strp_initialized;
 
 	/* datapath error path cache across tx work invocations */
 	int save_rem;
@@ -1429,14 +1430,15 @@ static void smap_write_space(struct sock *sk)
 
 static void smap_stop_sock(struct smap_psock *psock, struct sock *sk)
 {
-	if (!psock->strp_enabled)
-		return;
-	sk->sk_data_ready = psock->save_data_ready;
-	sk->sk_write_space = psock->save_write_space;
-	psock->save_data_ready = NULL;
-	psock->save_write_space = NULL;
-	strp_stop(&psock->strp);
-	psock->strp_enabled = false;
+	if (psock->strp_enabled) {
+		sk->sk_data_ready = psock->save_data_ready;
+		sk->sk_write_space = psock->save_write_space;
+		psock->save_data_ready = NULL;
+		psock->save_write_space = NULL;
+		psock->strp_enabled = false;
+	}
+	if (psock->strp_initialized)
+		strp_stop(&psock->strp);
 }
 
 static void smap_destroy_psock(struct rcu_head *rcu)
@@ -1506,12 +1508,16 @@ static int smap_init_sock(struct smap_psock *psock,
 			  struct sock *sk)
 {
 	struct strp_callbacks cb;
+	int err;
 
 	memset(&cb, 0, sizeof(cb));
 	cb.rcv_msg = smap_read_sock_strparser;
 	cb.parse_msg = smap_parse_func_strparser;
 	cb.read_sock_done = smap_read_sock_done;
-	return strp_init(&psock->strp, sk, &cb);
+	err = strp_init(&psock->strp, sk, &cb);
+	if (!err)
+		psock->strp_initialized = true;
+	return err;
 }
 
 static void smap_init_progs(struct smap_psock *psock,
@@ -1555,7 +1561,7 @@ static void smap_gc_work(struct work_struct *w)
 	psock = container_of(w, struct smap_psock, gc_work);
 
 	/* no callback lock needed because we already detached sockmap ops */
-	if (psock->strp_enabled)
+	if (psock->strp_initialized)
 		strp_done(&psock->strp);
 
 	cancel_work_sync(&psock->tx_work);

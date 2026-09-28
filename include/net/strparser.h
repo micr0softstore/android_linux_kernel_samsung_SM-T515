@@ -72,7 +72,6 @@ struct strparser {
 	u32 rx_unrecov_intr : 1;
 
 	struct sk_buff **rx_skb_nextp;
-	struct timer_list rx_msg_timer;
 	struct sk_buff *rx_skb_head;
 	unsigned int rx_need_bytes;
 	struct delayed_work rx_delayed_work;
