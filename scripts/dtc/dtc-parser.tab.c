@@ -1205,6 +1205,8 @@ YYSTYPE yylval;
   = { 1, 1, 1, 1 }
 # endif
 ;
+/* Location data for the lookahead symbol. */
+YYLTYPE yylloc;
 /* Number of syntax errors so far.  */
 int yynerrs;
 
