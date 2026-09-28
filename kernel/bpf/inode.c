@@ -372,12 +372,27 @@ static int bpf_symlink(struct inode *dir, struct dentry *dentry,
 	return 0;
 }
 
+/* Android's BPF loader pins objects in a temporary directory and then
+ * atomically moves them into their SELinux-labelled directory with
+ * renameat2(RENAME_NOREPLACE).  The 4.4 VFS rejects flagged renames unless
+ * the filesystem supplies the rename2 operation.
+ */
+static int bpf_rename2(struct inode *old_dir, struct dentry *old_dentry,
+		       struct inode *new_dir, struct dentry *new_dentry,
+		       unsigned int flags)
+{
+	if (flags & ~RENAME_NOREPLACE)
+		return -EINVAL;
+
+	return simple_rename(old_dir, old_dentry, new_dir, new_dentry);
+}
+
 static const struct inode_operations bpf_dir_iops = {
 	.lookup		= bpf_lookup,
 	.mkdir		= bpf_mkdir,
 	.symlink	= bpf_symlink,
 	.rmdir		= simple_rmdir,
-	.rename		= simple_rename,
+	.rename2	= bpf_rename2,
 	.link		= simple_link,
 	.unlink		= simple_unlink,
 };

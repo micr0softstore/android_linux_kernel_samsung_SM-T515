@@ -34,6 +34,8 @@ Integration decisions
 * Adapt tracing, socket references, and network helper APIs to the target.
   Correct cloned BPF socket-storage ownership and locked socket-send paths.
 * Reject negative BPF getsockopt lengths before copying buffers.
+* Add bpffs ``renameat2(RENAME_NOREPLACE)`` support required by Android T+
+  BPF loaders when moving temporary pins into SELinux-labelled directories.
 * Preserve the disabled remote-controller configuration under its new Kconfig
   name, and leave the optional TLS module disabled. Stream parser remains
   built in for sockmap support.
