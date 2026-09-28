@@ -178,6 +178,21 @@ trace_print_hex_seq(struct trace_seq *p, const unsigned char *buf, int buf_len)
 EXPORT_SYMBOL(trace_print_hex_seq);
 
 const char *
+trace_print_hex_str_seq(struct trace_seq *p, const unsigned char *buf, int buf_len)
+{
+	int i;
+	const char *ret = trace_seq_buffer_ptr(p);
+
+	for (i = 0; i < buf_len; i++)
+		trace_seq_printf(p, "%2.2x", buf[i]);
+
+	trace_seq_putc(p, 0);
+
+	return ret;
+}
+EXPORT_SYMBOL(trace_print_hex_str_seq);
+
+const char *
 trace_print_array_seq(struct trace_seq *p, const void *buf, int count,
 		      size_t el_size)
 {
